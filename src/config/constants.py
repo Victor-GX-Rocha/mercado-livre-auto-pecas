@@ -1,0 +1,1 @@
+""" Script reservado a valores padrão e constantes """
