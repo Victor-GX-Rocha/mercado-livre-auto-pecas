@@ -11,14 +11,15 @@ Provides:
 
 # database/repositories/base.py
 
-from typing import List, Optional, Generic, Iterator, Type, TypeVar
-from sqlalchemy.orm import Session, sessionmaker
+from typing import Optional, Generic, Iterator, Type, TypeVar
+from sqlalchemy.orm import Session
 from contextlib import contextmanager
 
-from ..database import engine, InternalSession
+from ..database import InternalSession
+
 
 TableEntity = TypeVar("TableEntity")
-# SessionFactory = sessionmaker(bind=engine) # Session factory
+
 
 @contextmanager
 def session_scope() -> Iterator[Session]:
@@ -30,8 +31,6 @@ def session_scope() -> Iterator[Session]:
     Raises:
         (Exception): Rolls back transaction on any exception and re-raises the error.
     """
-    # session = SessionFactory()
-    # session = Session()
     session = InternalSession()
     try:
         yield session
@@ -52,24 +51,20 @@ class BaseGetMethods(Generic[TableEntity]):
         """
         self.entity = entity
     
-    def all(self) -> List[TableEntity]:
+    def all(self) -> list[TableEntity]:
         """
         Get all records from the table.
+        
         Returns:
-            (List[TableEntity]): List of entities (empty if no records exist)
+            (list[TableEntity]): list of entities (empty if no records exist)
         """
         with session_scope() as session:
             return session.query(self.entity).all()
-        
-        # return InternalSession().query(self.entity).all()
-        #     rapaz = session.query(self.entity).all()
-            # print(rapaz)
-            # return rapaz
-            # print(session.query(self.entity).all())
     
     def by_id(self, id: int) -> Optional[TableEntity]:
         """
-        Get line record by ID
+        Get line record by ID.
+        
         Args:
             id (int): ID of the line that shuld be seleceted
         Returns:

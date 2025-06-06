@@ -1,43 +1,27 @@
-"""
-Repositorie for Produtos CRUD operations
-
-"""
+""" CRUD operations for Produtos table """
 
 # database/repositories/produtos.py
 
 from typing import List
+from dataclasses import dataclass
 
-from ..models.produtos import Produtos
-from .base import (
-    session_scope,
-    BaseGetMethods,
-    BaseUpdateMethods,
-    BaseDeleteMethods,
-    BaseInsertMethods
-)
+from ..models.produtos import Produtos, Product, ProdutosConverter
+from .base import session_scope
 
-class ProdutosGetPresetMethods:
-    """ Presset serach methods for user interface """
-    def pending_operations(self) -> List[Produtos]:
-        """ Get pending operations """
-        return self.by_status_operacao(1)
-    
-    def completed_operations(self) -> List[Produtos]:
-        """ Get completed operations """
-        return self.by_status_operacao(2)
-    
-    def in_process_operations(self) -> List[Produtos]:
-        """ Get in-process operations """
-        return self.by_status_operacao(0)
 
-class ProdutosGetMethods(BaseGetMethods, ProdutosGetPresetMethods):
-    """ Read (GET) methods for Produtos table entity. """
-    def __init__(self, entity: Produtos):
-        """
-        Args:
-            entity (Produtos): Produtos table entity.
-        """
-        super().__init__(entity)
+@dataclass
+class StatusOperationTypes:
+    PENDING: int = 1
+    COMPLETED: int = 2
+    IN_PROCESS: int = 0
+
+
+converter = ProdutosConverter()
+oper_status = StatusOperationTypes()
+
+
+class StatusOperationGetters:
+    """ Finders based on status_operacao_id column value.  Pressets search methods for user interface. """
     
     def by_status_operacao(self, operacao: int) -> List[Produtos]:
         """
@@ -49,36 +33,59 @@ class ProdutosGetMethods(BaseGetMethods, ProdutosGetPresetMethods):
             (List[Produtos]): List of Produtos table entity. (Empty if it not exists).
         """
         with session_scope() as session:
-            return session.query(self.entity).filter(self.entity.status_operacao_id == operacao).all()
+            produtos = session.query(self.entity).filter(self.entity.status_operacao_id == operacao).all()
+            return converter.convert(produtos)
+    
+    def pending_operations(self) -> List[Produtos]:
+        """ Get pending operations """
+        return self.by_status_operacao(oper_status.PENDING)
+    
+    def completed_operations(self) -> List[Produtos]:
+        """ Get completed operations """
+        return self.by_status_operacao(oper_status.COMPLETED)
+    
+    def in_process_operations(self) -> List[Produtos]:
+        """ Get in-process operations """
+        return self.by_status_operacao(oper_status.IN_PROCESS)
 
-    def test(self):
-        with session_scope() as session:
-            return session.query(Produtos).all()
+class ProdutosGetMethods(StatusOperationGetters):
+    """ Read (GET) methods for Produtos table entity. """
+    def __init__(self, entity: Produtos):
+        """
+        Args:
+            entity (Produtos): Produtos table entity.
+        """
+        self.entity = entity
+
+
 
 # Serão implementados no futuro, no momento é apenas um esboço
-class ProdutosUpdateMethods(BaseUpdateMethods):
+class ProdutosUpdateMethods:
     def __init__(self, entity: Produtos):
         """
         Args:
             entity (Produtos): Produtos table entity.
         """
-        super().__init__(entity)
+        self.entity = entity
 
-class ProdutosInsertMethods(BaseInsertMethods):
-    def __init__(self, entity: Produtos):
-        """
-        Args:
-            entity (Produtos): Produtos table entity.
-        """
-        super().__init__(entity)
 
-class ProdutosDeleteMethods(BaseDeleteMethods):
+class ProdutosInsertMethods:
     def __init__(self, entity: Produtos):
         """
         Args:
             entity (Produtos): Produtos table entity.
         """
-        super().__init__(entity)
+        self.entity = entity
+
+
+class ProdutosDeleteMethods:
+    def __init__(self, entity: Produtos):
+        """
+        Args:
+            entity (Produtos): Produtos table entity.
+        """
+        self.entity = entity
+
 
 
 class ProdutosRepository:

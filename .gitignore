@@ -5,3 +5,5 @@ pedal_category_attributes.json
 **/__pycache__/
 *.ipynb
 *.txt
+test
+scripts

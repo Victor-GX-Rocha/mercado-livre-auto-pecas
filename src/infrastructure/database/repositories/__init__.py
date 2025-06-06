@@ -1,5 +1,5 @@
 """
-CRUD repositorie for tables
+CRUD repositories for tables
 
 Provides:
     ProdutosRepository: Produtos repository table
