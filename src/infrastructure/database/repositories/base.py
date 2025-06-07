@@ -81,6 +81,18 @@ class BaseUpdateMethods:
             entity: Table entity.
         """
         self.entity = entity
+    
+    def log_error(self, id: int, cod_erro: int, log_erro: str) -> None:
+        """
+        Args:
+            id (int):
+            cod_erro (int):
+            log_erro (str):
+        """
+        with session_scope() as session:
+            produto = session.query(self.entity).get(id)
+            produto.log_erro = log_erro
+            produto.cod_erro = cod_erro
 
 class BaseDeleteMethods:
     def __init__(self, entity: Type[TableEntity]) -> None:

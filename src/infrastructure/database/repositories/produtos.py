@@ -6,7 +6,7 @@ from typing import List
 from dataclasses import dataclass
 
 from ..models.produtos import Produtos, Product, ProdutosConverter
-from .base import session_scope
+from .base import session_scope, BaseUpdateMethods
 
 
 @dataclass
@@ -60,7 +60,7 @@ class ProdutosGetMethods(StatusOperationGetters):
 
 
 # Serão implementados no futuro, no momento é apenas um esboço
-class ProdutosUpdateMethods:
+class ProdutosUpdateMethods(BaseUpdateMethods):
     def __init__(self, entity: Produtos):
         """
         Args:
