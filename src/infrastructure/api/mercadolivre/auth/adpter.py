@@ -1,16 +1,22 @@
-""" Conectar as ferramentas de conexão com o mercado livre e demais funcionalidades do programa """
+""" An adapter to pissibilite the directly use of a "table.cretentials" with the AuthManager. """
 
 from .models import MeliCredentialsProtocol
 from .manager import AuthManager, AuthResponse
 
-class MeliAuthAdapter:
-    """ Adpta o formato padrão de colunas de credenciais com o método de refresh token """
+class MeliAuthCredentials:
+    """ An interface between the AuthManager and credentials coluns of a table. """
     
     def __init__(self, auth_manager: AuthManager):
         self.auth_manager = auth_manager
     
-    def refresh_token(self, credentials: MeliCredentialsProtocol) -> AuthResponse:
-        """ Refresh token configurado para suportar o modelo de colunas com credenciais """
+    def get_refresh_token(self, credentials: MeliCredentialsProtocol) -> AuthResponse:
+        """ 
+        Gets an refresh token based an "table.credentials" object.
+        Args:
+            credentials (MeliCredentialsProtocol): The credentials coluns of a table.
+        Returns:
+            AuthResponse: A dataclass object with the auth response content.
+        """
         return self.auth_manager.get_refresh_token(
             credentials.client_id,
             credentials.client_secret,
