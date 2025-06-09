@@ -14,11 +14,9 @@ Provides:
 from typing import Type, TypeVar
 
 from ..session import session_scope
-from .getters import StatusOperationGetters
-from .updatters import Loggers
-
-
-TableEntity = TypeVar("TableEntity")
+from .geters import StatusOperationGetters
+from .updaters import Loggers
+from ..models import TableEntity
 
 
 # class BaseGetMethods(Generic[TableEntity]):

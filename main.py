@@ -1,4 +1,4 @@
-"""  """
+""" main file. """
 
 from src.main_loop import MainLoop
 

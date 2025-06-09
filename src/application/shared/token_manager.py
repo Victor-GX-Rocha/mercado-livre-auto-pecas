@@ -1,21 +1,25 @@
 """ Manager the creation of meercado libre API token for an user application """
 
-from typing import Any
+from typing import Optional
 
-from ...infrastructure.api.mercadolivre.auth import MeliAuthCredentials
-from ...infrastructure.database.repositories.models import TableRepository, TableDataclass
+from ...infrastructure.database.repositories.interfaces.base_protocol import TableRepositoryProtocol
+from ...infrastructure.api.mercadolivre.auth import MeliAuthCredentials, AuthResponse
+from ...infrastructure.database.repositories.models import DataclassTable
+
 
 # Criar um modélo de repositorie para usar como typing
 
 class MeliTokenManager:
-    """ Gets and validation the crateon af a token """
-    def __init__(self, meli_auth: MeliAuthCredentials, repo: TableRepository):
+    """ Gets and validation the creation of a token. """
+    def __init__(self, meli_auth: MeliAuthCredentials, repo: TableRepositoryProtocol):
         self.auth = meli_auth
         self.repo = repo
     
-    def get_token(self, lines: list[TableDataclass]):
+    def get_token(self, lines: list[DataclassTable]) -> Optional[AuthResponse]:
         """
         Get an mercado libre auth token and valids the process.
+        Args:
+            line (list[DataclassTable]): Table line.
         """
         for line in lines:
             if not self._has_empty_column(line):
@@ -28,9 +32,13 @@ class MeliTokenManager:
             print(response)
             return response
     
-    def _has_empty_column(self, line: TableDataclass):
-        # verify if a column is empty
-        
+    def _has_empty_column(self, line: DataclassTable) -> Optional[bool]:
+        """
+        Verify if there exists an empty column.
+        Args:
+            line (DataclassTable): Table line.
+        """
+        # print(f"_has_empty_column: {line}")
         if not all([
             line.credentials.client_id,
             line.credentials.client_secret,
@@ -41,8 +49,13 @@ class MeliTokenManager:
             return None
         return True
     
-    def _make_request(self, line: TableDataclass):
-        token = self.auth.refresh_token(line.credentials)
+    def _make_request(self, line: DataclassTable) -> Optional[AuthResponse]:
+        """
+        Makes the auth request for mercado libre. 
+        Args:
+            line (DataclassTable): Table line.
+        """
+        token = self.auth.get_refresh_token(line.credentials)
         if not token.success:
             # print(line.error_logers)
             self.repo.update.log_error(line.id, 89, str(token.error))

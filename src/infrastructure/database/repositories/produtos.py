@@ -1,9 +1,11 @@
-""" CRUD operations for Produtos table """
+""" CRUD operations for Produtos table. """
 
 # database/repositories/produtos.py
 
+# from session import session_scope
+# from session.session_manager import session_scope
+from src.infrastructure.database.repositories.session.session_manager import session_scope
 from ..models.produtos import Produtos, Product, ProdutosConverter
-from session import session_scope
 from .base import (
     BaseGetMethods,
     BaseUpdateMethods,
@@ -25,6 +27,7 @@ class ProdutosGetMethods(BaseGetMethods):
 
 
 class ProdutosUpdateMethods(BaseUpdateMethods):
+    """ Update methods for Produtos table entity. """
     def __init__(self, entity: Produtos):
         """
         Args:
@@ -34,6 +37,7 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
 
 
 class ProdutosInsertMethods(BaseDeleteMethods):
+    """ Delete methods for Produtos table entity. """
     def __init__(self, entity: Produtos):
         """
         Args:
@@ -43,6 +47,7 @@ class ProdutosInsertMethods(BaseDeleteMethods):
 
 
 class ProdutosDeleteMethods(BaseInsertMethods):
+    """ Create (Insert) methods for Produtos table entity. """
     def __init__(self, entity: Produtos):
         """
         Args:
@@ -52,6 +57,7 @@ class ProdutosDeleteMethods(BaseInsertMethods):
 
 
 class ProdutosRepository:
+    """ SQL commands for table Produtos. """
     def __init__(self):
         self.get = ProdutosGetMethods(Produtos)
         self.update = ProdutosUpdateMethods(Produtos)

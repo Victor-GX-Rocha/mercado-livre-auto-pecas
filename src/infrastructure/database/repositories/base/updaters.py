@@ -3,16 +3,15 @@
 # database/repositories/base/updatters.py
 
 from ..session import session_scope
-from .base import TableEntity, TableDataclass
 
 class Loggers:
     """ Basic common logers for any table who conatains the cod_erro, log_erro columns"""
     def log_error(self, id: int, cod_erro: int, log_erro: str) -> None:
         """
         Args:
-            id (int):
-            cod_erro (int):
-            log_erro (str):
+            id (int): Line ID.
+            cod_erro (int): Error code.
+            log_erro (str): Log message.
         """
         with session_scope() as session:
             produto = session.query(self.entity).get(id)

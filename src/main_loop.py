@@ -8,12 +8,16 @@ from .config import AppConfigManager
 config = AppConfigManager()
 database_config = config.load_database_config()
 
+from .application.services import ProdutosApplication
+
+app_produtos = ProdutosApplication()
 
 class MainLoop:
     """ Manages and controls the main program loop """
     def turn_on(self):
         """ Turns on the loop and keeps it active as long as the STILL_ON variable in the .env file is active """
         try:
+            logging.info("Iniciando o bot...")
             while True:
                 
                 app_config = config.load_app_config()
@@ -24,18 +28,10 @@ class MainLoop:
                     logging.info('Arquivo .env: Comando desligar.')
                     break
                 
-                # Services
-                
-                """      
-                Aqui vão ficar os diferentes mini sistemas internos do programa tlg. 
-                Vou rebatizar eles como services instead of "routines". At this way I can organize then insid an especialized folder.
-                
-                services.product() # Here I can pass the SQLAlchemy object diretcly
-                services.status()
-                services.categories()
-                """
-                
+                # Applications
+                app_produtos.execute()
                 time.sleep(timer)
+                break
         except KeyboardInterrupt as k:
             logging.info(f"Programa desligado manualmente pelo usuário {k}")
         except Exception as e:

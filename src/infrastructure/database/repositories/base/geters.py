@@ -3,21 +3,20 @@
 # database/repositories/base/getters.py
 
 from ..session import session_scope
-from .base import TableEntity, TableDataclass
-from .models import StatusOperationTypes
+from ..models import StatusOperationTypes, TableEntity, DataclassTable
 
 
 class StatusOperationGetters:
     """ Finders based on status_operacao_id column value. Pressets search methods for user interface. """
     
-    def by_status_operacao(self, operacao: int) -> list[TableDataclass]:
+    def by_status_operacao(self, operacao: int) -> list[DataclassTable]:
         """
         Pick all lines with specified `operacao` value.
         
         Args:
             operacao (int): Number of operation type.
         Returns:
-            (list[TableDataclass]): list of a TableDataclass objects. (Empty list if it not exists).
+            (list[DataclassTable]): list of a DataclassTable objects. (Empty list if it not exists).
         """
         with session_scope() as session:
             operations = session.query(self.entity).filter(self.entity.status_operacao_id == operacao).all()

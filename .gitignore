@@ -1,8 +1,8 @@
 .env
 teste.py
 commands.sql
-pedal_category_attributes.json
 **/__pycache__/
+*.json
 *.ipynb
 *.txt
 test
