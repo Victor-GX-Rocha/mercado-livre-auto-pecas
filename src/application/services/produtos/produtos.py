@@ -16,8 +16,9 @@ from .operations import (
     Deletation,
 )
 
-meli_client = MLBaseClient()
-auth_manager = AuthManager(meli_client)
+# meli_client = MLBaseClient()
+# auth_manager = AuthManager(meli_client)
+auth_manager = AuthManager()
 
 class OperationFactory:
     def __init__(self, repo, json_generator=None):

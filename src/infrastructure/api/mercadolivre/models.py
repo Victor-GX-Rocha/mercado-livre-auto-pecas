@@ -6,7 +6,10 @@ from typing import Optional, Any, Union, Literal
 
 # Define contextos válidos e já evita erros de digitação tlg
 MeliContext = Literal[
-    "auth"#, 
+    "auth",
+    "category_data",
+    "category_attributes",
+    "RequestException"
     # "product_publish", 
     # "product_update",
     # "category_management",

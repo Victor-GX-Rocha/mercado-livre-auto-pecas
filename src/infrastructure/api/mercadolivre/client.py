@@ -55,6 +55,7 @@ class MLBaseClient:
                 success=False,
                 error=MeliErrorDetail(
                     message="Falha na comunicação com a API",
+                    context="RequestException",
                     code=1000,  # Código interno para erros de rede
                     exception=exc
                 )

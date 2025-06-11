@@ -5,8 +5,8 @@ from ..models import MeliResponse, MeliErrorDetail
 from .models import AuthResponse
 
 class AuthManager:
-    def __init__(self, client: MLBaseClient):
-        self.client = client
+    def __init__(self):
+        self.client = MLBaseClient()
     
     def get_refresh_token(self, client_id: str, client_secret: str, redirect_uri: str, refresh_token: str) -> MeliResponse:
         payload = {

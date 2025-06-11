@@ -1,0 +1,1 @@
+""" Shared categorie finders functionalities. """

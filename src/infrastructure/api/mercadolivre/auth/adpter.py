@@ -6,8 +6,8 @@ from .manager import AuthManager, AuthResponse
 class MeliAuthCredentials:
     """ An interface between the AuthManager and credentials coluns of a table. """
     
-    def __init__(self, auth_manager: AuthManager):
-        self.auth_manager = auth_manager
+    def __init__(self):
+        self.auth_manager = AuthManager()
     
     def get_refresh_token(self, credentials: MeliCredentialsProtocol) -> AuthResponse:
         """ 
