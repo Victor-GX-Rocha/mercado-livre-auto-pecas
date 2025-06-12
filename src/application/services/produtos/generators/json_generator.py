@@ -94,9 +94,7 @@ class JsonGenerator:
                 "accepts_mercadopago": True,
                 "attributes": attributes.result,
                 "shipping": shipping.result,
-                
-                "pictures": pictures.result,
-                
+                "pictures": pictures.result
             }
             
         except Exception as e:
