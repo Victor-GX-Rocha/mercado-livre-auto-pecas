@@ -11,7 +11,7 @@ from ...shared.validators import (
     EmptyCredentialColumnsValidator
 )
 from ...shared.models import ValidationResponse
-from .generators import JsonGenerator
+from .generators import JsonGenerator, JsonGeneratorResponse
 
 
 runtime_checkable
@@ -51,7 +51,7 @@ class Publication(ProdutosOperation):
                 continue
             
             json_response = self.create_json()
-            if not json_response:
+            if not json_response.success:
                 continue
             
             # self.create_json()
@@ -60,31 +60,31 @@ class Publication(ProdutosOperation):
             # self.add_compatibility()
             ## self.update the database
     
-    def create_json(self, line: Product) -> list[dict[str, Any]] | None:
+    def create_json(self, line: Product) -> JsonGeneratorResponse:
         """
-        
+        Creates a dictionary with publication data.
         Args:
-            line (list[Product]):
+            line (list[Product]): 
         Returns:
             (list[dict[str, Any]]):
             None: If any error occurred.
         """
         json_response = self.json_generator.build_json(line)
         if not json_response.success:
-            self.repo.update.log_error(line.id, cod_erro=89, log_erro=json_response.causes)
-            return None
-        return json_response.result
+            self.repo.update.log_error(line.id, cod_erro=89, log_erro=json_response.error)
+        return json_response
     
     def publish(self):...
     def add_description(self):...
     def add_compatibility(self):...
+    
     def validate(self, line: Product) -> bool:
         """
         Vaidate if the product is able to be updloaded.
         Args:
-            line (Product):
+            line (Product): 
         Returns:
-            ValidationResponse: 
+            bool: True if valid, else False.
         """
         causes: list = []
         for validator in self.validators:

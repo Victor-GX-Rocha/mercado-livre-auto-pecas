@@ -7,7 +7,7 @@ from ......infrastructure.database.models.produtos import Product
 from ......infrastructure.api.mercadolivre.auth import AuthResponse
 from ......infrastructure.api.mercadolivre.images import MeliImageManager
 from ......infrastructure.api.mercadolivre.models import MeliResponse
-from ......infrastructure.api.cloudinary.cloud import CloudinaryManager
+from ......infrastructure.api.cloudinary.manager import CloudinaryManager
 from .....shared.image_normalizer import ImageNormalizer
 from .models import PicturesGeneratorResponse
 from .corrector import CorretImageDimentions
@@ -31,9 +31,14 @@ class UrlGeneratorResponse:
     data: UrlGeneratorContent | None
 
 
+Quanto ao ID, na verdade ainda falta ativar a classe do cloudinary!!!
+
+from .url_generators import UrlGeneratorFactory 
+
+
 class PicturesGenerator:
     def __init__(self):
-        self.url_generator = CloudinaryManager() # Needs an activation!
+        self.url_generator = UrlGeneratorFactory.chose("cloudinary") # Needs an activation!
         self.image_normalizer = ImageNormalizer
         self.correct_image = CorretImageDimentions()
         self.meli_image_manager = MeliImageManager()
@@ -92,15 +97,14 @@ class PicturesGenerator:
             result=urls,
             error=None
         )
-        
-        
     
-    def __upload_image(self, image_path: str):
+    def __upload_image(self, image_path: str) -> UrlGeneratorResponse:
         """
+        Upload an image to a online repositorie and returns the image link.
         Args:
-            
+            image_path (str): Image path.
         Returns:
-            
+            (UrlGeneratorResponse): Response what contains the content of the upload (image url).
         """
         response = self.url_generator.upload_image(image_path)
         
@@ -112,12 +116,14 @@ class PicturesGenerator:
                     url=response.get("secure_url")
                 )
             )
-        
     
     def __create_meli_ids(self, urls: list[UrlGeneratorResponse], token: AuthResponse) -> PicturesGeneratorResponse:
         """
+        Upload a list of URLs to mercado libre and create the meli image IDs.
         Args:
-            urls (list[str]):
+            urls (list[UrlGeneratorResponse]): List with the UrlGeneratorResponse what contains the images urls.
+        Returns:
+            PicturesGeneratorResponse: Mercado libre response with IDs.
         """
         failed_pictures_ids: list[str] = []
         meli_pictures_ids: list[str] = []
@@ -125,7 +131,7 @@ class PicturesGenerator:
         for url in urls:
             meli_picture_id = self.__upload_url(url.data.url, token)
             if not meli_picture_id.success:
-                failed_pictures_ids.append(f"url:{url.data.url}, causa: {meli_picture_id.error.message}")
+                failed_pictures_ids.append(f"url: {url.data.url}, causa: {meli_picture_id.error.message}")
             meli_pictures_ids.append(meli_picture_id.data.get("id")) # Gets the meli image id
             self.url_generator.delete_image(url.data.id) # Removes the online image from account
         
@@ -148,10 +154,10 @@ class PicturesGenerator:
         """
         Returns a MeliResponse with the mercado libre picture data.
         Args:
-            url (str):
-            token (AuthResponse):
+            url (str): Image url.
+            token (AuthResponse): Meli token for upload url request.
         Returns:
-            (MeliResponse): 
+            MeliResponse: Response with the IDs content.
         """
         meli_id_response = self.meli_image_manager.get_meli_picture(image_url=url, access_token=token.access_token)
         

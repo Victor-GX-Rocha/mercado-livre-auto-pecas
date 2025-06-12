@@ -11,26 +11,29 @@ from .....core.log import logging
 from .....infrastructure.database.models.produtos import Product
 from .....infrastructure.api.mercadolivre.auth import AuthResponse
 from .attributes import AttributesGenerator
-from .pictures import PicturesGenerator
+from .pictures import PicturesGenerator, PicturesGeneratorResponse
+from .models import (
+    JsonGeneratorResponse,
+    ShippimentGeneratorResponse
+)
 
+# @dataclass
+# class JsonGeneratorResponse:
+#     success: bool
+#     result: Optional[dict[str, Any]]
+#     error: list
 
-@dataclass
-class JsonGeneratorResponse:
-    success: bool
-    result: Optional[dict[str, Any]]
-    error: list
+# @dataclass
+# class ShippimentGeneratorResponse:
+#     success: bool
+#     result: Optional[dict[str, Any]]
+#     error: list
 
-@dataclass
-class ShippimentGeneratorResponse:
-    success: bool
-    result: Optional[dict[str, Any]]
-    error: list
-
-@dataclass
-class PicturesGeneratorResponse:
-    success: bool
-    result: Optional[dict[str, Any]]
-    error: list
+# @dataclass
+# class PicturesGeneratorResponse:
+#     success: bool
+#     result: Optional[dict[str, Any]]
+#     error: list
 
 class JsonGenerator:
     def __init__(self):
@@ -39,19 +42,23 @@ class JsonGenerator:
             cloud (): Cloudinary API interface. 
             # In the future, I need to think about this as any type of image uploader, not only cloudinary
         """
-        # self.cloud = cloud
         self.attribute_generator = AttributesGenerator()
         self.pictures_generator = PicturesGenerator()
+        self.category_generator = CategoryGenerator()
     
-    def build_json(self, product: Product, token: AuthResponse) -> JsonGeneratorResponse:#dict[str, Any]:
+    def build_publication_json(self, product: Product, token: AuthResponse) -> JsonGeneratorResponse:#dict[str, Any]:
         """
-        
+        Construct a json with data for a publication on mercado libre.
         Args:
-            product: 
-            cloud: 
-            token: 
+            product (Product): 
+            token (AuthResponse): 
         Returns:
-            dict:
+            (JsonGeneratorResponse):
+        Todo:
+            - [x] shipping.
+            - [x] attributes.
+            - [ ] pictures (in process)
+            - [ ] category
         """
         
         shipping = self.build_shipping_info(product)
@@ -67,7 +74,7 @@ class JsonGenerator:
             return JsonGeneratorResponse(
                 success=False,
                 result=None,
-                error=attributes.errors
+                error=attributes.error
             )
         
         pictures = self.pictures_generator.create(product, token)
@@ -75,7 +82,19 @@ class JsonGenerator:
             return JsonGeneratorResponse(
                 success=False,
                 result=None,
-                error=pictures.errors
+                error=pictures.error
+            )
+        
+        """
+        Quanto ao ID, na verdade ainda falta ativar a classe do cloudinary!!!
+        """
+        
+        category = self.category_generator.create(product, token)
+        if not category.success:
+            return JsonGeneratorResponse(
+                success=False,
+                result=None,
+                error=category.errors
             )
         
         try:
@@ -83,7 +102,7 @@ class JsonGenerator:
             self.template_json: dict[str, Any] = {
                 "site_id": "MLB",
                 "title": product.sale.titulo,
-                "category_id": chosen_category,
+                "category_id": category.result, Ainda falta criar isso
                 "price": product.sale.preco,
                 "currency_id": 'BRL',
                 "available_quantity": product.sale.estoque,
