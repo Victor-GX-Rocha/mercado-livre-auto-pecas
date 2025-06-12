@@ -1,16 +1,9 @@
 """ Validators for a category based on a Product line """
 
-from dataclasses import dataclass
-from typing import Protocol, Any, Optional
+from typing import Protocol, Any
 
 from .....infrastructure.database.models.produtos import Product
-
-
-@dataclass
-class ValidationResponse:
-    is_valid: bool = False 
-    reason: Optional[str] = None
-    causes: Optional[list] = None
+from ....shared.models import ValidationResponse
 
 
 class CategoryValidateProtocol(Protocol):

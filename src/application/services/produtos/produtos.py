@@ -6,7 +6,7 @@ from ....infrastructure.database.models.produtos import Produtos, Product
 from ....infrastructure.database.repositories import ProdutosRepository
 from ...shared.oganizer import GroupBy
 from ...shared.token_manager import MeliTokenManager
-from .json_generator import JsonGenerator
+from .generators.json_generator import JsonGenerator
 from .operations import (
     ProdutosOperation,
     Publication,

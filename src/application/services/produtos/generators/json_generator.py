@@ -7,11 +7,12 @@
 from typing import Any, Optional
 from dataclasses import dataclass
 
-from ....core.log import logging
-from ....infrastructure.database.models.produtos import Product
-from ....infrastructure.api.mercadolivre.auth import AuthResponse
+from .....core.log import logging
+from .....infrastructure.database.models.produtos import Product
+from .....infrastructure.api.mercadolivre.auth import AuthResponse
+from .attributes import AttributesGenerator
+from .pictures import PicturesGenerator
 
-from .attributes.manager import AttributesGenerator
 
 @dataclass
 class JsonGeneratorResponse:
@@ -19,6 +20,17 @@ class JsonGeneratorResponse:
     result: Optional[dict[str, Any]]
     error: list
 
+@dataclass
+class ShippimentGeneratorResponse:
+    success: bool
+    result: Optional[dict[str, Any]]
+    error: list
+
+@dataclass
+class PicturesGeneratorResponse:
+    success: bool
+    result: Optional[dict[str, Any]]
+    error: list
 
 class JsonGenerator:
     def __init__(self):
@@ -29,8 +41,9 @@ class JsonGenerator:
         """
         # self.cloud = cloud
         self.attribute_generator = AttributesGenerator()
+        self.pictures_generator = PicturesGenerator()
     
-    def build_json(self, product: Product, token: AuthResponse) -> dict[str, Any]:
+    def build_json(self, product: Product, token: AuthResponse) -> JsonGeneratorResponse:#dict[str, Any]:
         """
         
         Args:
@@ -40,12 +53,29 @@ class JsonGenerator:
         Returns:
             dict:
         """
+        
+        shipping = self.build_shipping_info(product)
+        if not shipping.success:
+            return JsonGeneratorResponse(
+                success=False,
+                result=None,
+                error=shipping.error
+            )
+        
         attributes = self.attribute_generator.create(product, token)
         if not attributes.success:
             return JsonGeneratorResponse(
                 success=False,
                 result=None,
                 error=attributes.errors
+            )
+        
+        pictures = self.pictures_generator.create(product, token)
+        if not pictures.success:
+            return JsonGeneratorResponse(
+                success=False,
+                result=None,
+                error=pictures.errors
             )
         
         try:
@@ -63,9 +93,9 @@ class JsonGenerator:
                 "seller_custom_field": product.identfiers.sku,
                 "accepts_mercadopago": True,
                 "attributes": attributes.result,
+                "shipping": shipping.result,
                 
                 "pictures": pictures.result,
-                "shipping": envio,
                 
             }
             
@@ -78,7 +108,43 @@ class JsonGenerator:
                 error=[message]
             )
         
-        
+    def build_shipping_info(self, product: Product) -> ShippimentGeneratorResponse:
+        """
+        Build the shippiment data.
+        Args:
+            product: 
+        """
+        try:
+            
+            comprimento: str = product.dimensions.comprimento
+            largura: str = product.dimensions.largura
+            altura: str = product.dimensions.altura
+            peso: str = product.dimensions.peso
+            
+            dimensoes: str = str(f'{comprimento}x{largura}x{altura},{peso}')
+            
+            shipping_info: dict[str, Any] = {
+                "mode": product.shippiment.modo_envio,
+                "dimensions": dimensoes,
+                "local_pick_up": product.shippiment.retirada_local,
+                "free_shipping": product.shippiment.frete_gratis,
+                "logistic_type": "logistic_type"  # 'drop_off'
+            }
+            
+            return ShippimentGeneratorResponse(
+                success=False,
+                result=shipping_info,
+                error=[message]
+            )
+            
+        except Exception as e:
+            message: str = f"Falha inesperada ao criar informações de envio: {e}"
+            logging.error(message)
+            return ShippimentGeneratorResponse(
+                success=False,
+                result=None,
+                error=[message]
+            )
         
         
         

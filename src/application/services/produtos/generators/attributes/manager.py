@@ -1,8 +1,8 @@
 """ Generate the attributes list """
 
-from .....core.log import logging
-from .....infrastructure.database.models.produtos import Product
-from .....infrastructure.api.mercadolivre.auth import AuthResponse
+from ......core.log import logging
+from ......infrastructure.database.models.produtos import Product
+from ......infrastructure.api.mercadolivre.auth import AuthResponse
 
 from .validator import AttributesValidator
 from .models import (

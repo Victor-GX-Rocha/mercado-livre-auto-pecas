@@ -9,7 +9,8 @@ MeliContext = Literal[
     "auth",
     "category_data",
     "category_attributes",
-    "RequestException"
+    "RequestException",
+    "image_upload"
     # "product_publish", 
     # "product_update",
     # "category_management",

@@ -1,8 +1,28 @@
 """ Manage the creation of a mercado libre images IDs """
 
-from ....core.log import logging
+from .....core.log import logging
 
+import re
+import os
+import json
+import requests
+
+from typing import Optional
+from decimal import Decimal
 from PIL import Image
+import cv2
+import numpy as np
+
+from core.log import logging
+
+from database.repositories import ProductRepository
+
+
+
+def decimal_default(obj) -> str:
+    if isinstance(obj, Decimal):
+        return str(obj)
+    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
 
 class ImageProcessor:
@@ -198,4 +218,45 @@ class GerarImagens:
                 f"Erro ao criar IDs de imagens no Mercado Livre: {e}"
             )
             return []
+
+
+
+
+
+
+from .....infrastructure.database.models.produtos import Product
+
+
+class ImageURLGenerator:...
+
+
+class MeliImagesGenerator:
+    def __init__(self, url_generator):
+        self.url_generator = url_generator
+
+    # def get_image_url(self):... This step needs to be realited in another class
+    
+    def create(self, product: Product):
+        """
+        Args:
+            product Product:
+        """
+        img_paths: list[str] = normalize_images_paths(product.sale.imagens)
+        urls: list[str] = self.url_generator(img_paths)
+        return [self.get_image_id(url) for url in urls]
+        
+    
+    def get_image_id(self):...
+
+
+
+
+
+
+
+
+
+
+
+
 

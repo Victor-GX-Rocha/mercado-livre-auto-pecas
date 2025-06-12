@@ -3,8 +3,8 @@
 from typing import Protocol
 from abc import abstractmethod
 
-from .....infrastructure.database.models.produtos import Product
-from .....infrastructure.api.mercadolivre.auth import AuthResponse
+from ......infrastructure.database.models.produtos import Product
+from ......infrastructure.api.mercadolivre.auth import AuthResponse
 
 class GeneratorsProtocol(Protocol):
     @abstractmethod
