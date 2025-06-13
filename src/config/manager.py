@@ -105,9 +105,15 @@ class AppConfigManager(RealTimeEnvManager):
     
     @property
     def database_url(self) -> str:
-        """ Create connection URL """
+        """ Create connection URL. """
         db = self.load_database_config()
         return f"postgresql+psycopg2://{db.user}:{db.password}@{db.hostname}:{db.port}/{db.database}"
+    
+    def get_cloud_user_name(self) -> str:
+        """ Get the name of cloudinary user.  """
+        env_data = self._read_env_file()
+        RequiredKeysValidator(["CLOUDINARY_USER"]).validate(env_data)
+        return env_data["CLOUDINARY_USER"]
     
     def verify_off_command(self) -> None:
         """ If STILL_ON == False. Auto turn off the program """

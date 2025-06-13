@@ -9,67 +9,62 @@ from ......infrastructure.api.mercadolivre.images import MeliImageManager
 from ......infrastructure.api.mercadolivre.models import MeliResponse
 from ......infrastructure.api.cloudinary.manager import CloudinaryManager
 from .....shared.image_normalizer import ImageNormalizer
-from .models import PicturesGeneratorResponse
-from .corrector import CorretImageDimentions
-# from .generator import 
-
-from dataclasses import dataclass
-
-@dataclass
-class UrlGeneratorError:
-    cause: str
-
-@dataclass
-class UrlGeneratorContent:
-    id: str
-    url: str
-
-@dataclass
-class UrlGeneratorResponse:
-    success: bool
-    error: str | None
-    data: UrlGeneratorContent | None
-
-
-Quanto ao ID, na verdade ainda falta ativar a classe do cloudinary!!!
-
 from .url_generators import UrlGeneratorFactory 
+from .models import PicturesGeneratorResponse
+from .corrector import CorretImageProperties
+from .url_generators.interface import (
+    IImageUploader,
+    UrlGeneratorResponse
+)
 
 
 class PicturesGenerator:
+    """ Generate meli picutures IDs. """
     def __init__(self):
-        self.url_generator = UrlGeneratorFactory.chose("cloudinary") # Needs an activation!
+        self.url_generator: IImageUploader = UrlGeneratorFactory.chose("cloudinary")
         self.image_normalizer = ImageNormalizer
-        self.correct_image = CorretImageDimentions()
+        self.correct_image = CorretImageProperties()
         self.meli_image_manager = MeliImageManager()
     
     def create(self, product: Product, token: AuthResponse) -> PicturesGeneratorResponse:
         """
-        
+        Create a list of meli picutures IDs.
         Args:
-            product (Product):
-            token (AuthResponse):
+            product (Product): 
+            token (AuthResponse): Meli token for upload url request.
         Returns:
-            (PicturesGeneratorResponse):
+            PicturesGeneratorResponse: List with the meli pictures IDs.
         """
-        image_paths: list[str] = self.image_normalizer.correct_format(product.sale.imagens)
-        if not image_paths:
+        try:
+            
+            image_paths: list[str] = self.image_normalizer.correct_format(product.sale.imagens)
+            if not image_paths:
+                return PicturesGeneratorResponse(
+                    success=False,
+                    result=None,
+                    error=f'Coluna "imagens" possui conteúdo em formato inadequado: {image_paths}'
+                )
+            
+            url_response = self.__create_urls(image_paths)
+            if not url_response.success:
+                return url_response
+            
+            return self.__create_meli_ids(url_response.result, token)
+            
+        except Exception as e:
             return PicturesGeneratorResponse(
                 success=False,
                 result=None,
-                error=f'Coluna "imagens" possui conteúdo em formato inadequado: {image_paths}'
+                error=f"Erro inesperado durante o processo de criação dos IDs de imagem do mercado livre: {e}"
             )
-        
-        url_response = self.__create_urls(image_paths)
-        if not url_response.success:
-            return url_response
-        
-        return self.__create_meli_ids(url_response.result, token)
     
     def __create_urls(self, images_paths: list[str]) -> PicturesGeneratorResponse:
         """
+        Upload a list of images on a online repositorie.
         Args:
-            images_paths (list[str]):
+            images_paths (list[str]): Images paths to upload.
+        Returns:
+            PicturesGeneratorResponse A list with the images URLs.
         """
         urls: list[UrlGeneratorResponse] = []
         failed_urls: list[str] = []
@@ -78,7 +73,7 @@ class PicturesGenerator:
             temp_image = self.correct_image.corret(img)
             url_response = self.__upload_image(temp_image)
             if not url_response.success:
-                failed_urls.append(f"Imagem: {img}, causa: {url_response.error.cause}")
+                failed_urls.append(f"Imagem: {img}, causa: {url_response.error}")
             urls.append(url_response)
             os.remove(temp_image) # Removes the temp image.
         
@@ -106,16 +101,8 @@ class PicturesGenerator:
         Returns:
             (UrlGeneratorResponse): Response what contains the content of the upload (image url).
         """
-        response = self.url_generator.upload_image(image_path)
-        
-        return UrlGeneratorResponse(
-                success=True,
-                error=None,
-                data=UrlGeneratorContent(
-                    id=response.get("image_id"),
-                    url=response.get("secure_url")
-                )
-            )
+        return self.url_generator.upload_image(image_path)
+
     
     def __create_meli_ids(self, urls: list[UrlGeneratorResponse], token: AuthResponse) -> PicturesGeneratorResponse:
         """
@@ -132,9 +119,9 @@ class PicturesGenerator:
             meli_picture_id = self.__upload_url(url.data.url, token)
             if not meli_picture_id.success:
                 failed_pictures_ids.append(f"url: {url.data.url}, causa: {meli_picture_id.error.message}")
-            meli_pictures_ids.append(meli_picture_id.data.get("id")) # Gets the meli image id
+            meli_pictures_ids.append(meli_picture_id.result.get("id")) # Gets the meli image id
             self.url_generator.delete_image(url.data.id) # Removes the online image from account
-        
+            
         if failed_pictures_ids:
             logging.warning(f"Falha ao gerar um ID para a url: {failed_pictures_ids}")
         
@@ -159,7 +146,7 @@ class PicturesGenerator:
         Returns:
             MeliResponse: Response with the IDs content.
         """
-        meli_id_response = self.meli_image_manager.get_meli_picture(image_url=url, access_token=token.access_token)
+        meli_id_response = self.meli_image_manager.get_meli_picture(image_url=url, access_token=token.data.access_token)
         
         if not meli_id_response.success:
             logging.error(f"{meli_id_response.error.message}. Exception: {meli_id_response.error.exception}")

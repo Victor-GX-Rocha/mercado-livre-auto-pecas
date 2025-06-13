@@ -2,7 +2,7 @@
 
 import operator
 from typing import Protocol, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from abc import abstractmethod
 
 from ...infrastructure.database.repositories.models import DataclassTable
@@ -13,9 +13,8 @@ class ValidationResponse:
     reason: Optional[str] = None
     causes: Optional[list] = None
 
-@dataclass
 class CommonValidations:
-    credential_columns: list[str] = [
+    CREDENTIAL_COLUMNS = [
         "credentials.client_id",
         "credentials.client_secret",
         "credentials.redirect_uri",
@@ -65,7 +64,7 @@ class EmptyColumnsValidator(ValidatorsProtocol):
         return ValidationResponse(is_valid=True)
 
 class EmptyCredentialColumnsValidator(EmptyColumnsValidator):
-    def __init__(self, columns_path_list: list[str] = CommonValidations.credential_columns):
+    def __init__(self, columns_path_list: list[str] = CommonValidations.CREDENTIAL_COLUMNS):
         self.columns_path_list = columns_path_list
         self.getters = [operator.attrgetter(path) for path in columns_path_list]
     

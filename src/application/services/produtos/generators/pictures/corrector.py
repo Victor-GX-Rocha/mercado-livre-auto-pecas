@@ -1,25 +1,31 @@
-"""  """
+""" Image corretors. """
 
 from PIL import Image
 
-class CorretImageDimentions:
-    """  """
-    def corret(self, imagem_path: str):
+class CorretImageProperties:
+    """ Provides image corret methods. """
+    def corret(self, imagem_path: str) -> str:
         """
-        
+        Correct the image dimensions and format.
+        - Resize if less than 500x500.
+        - Convert to ['JPEG', 'JPG', 'PNG'] if diferent. 
         Args:
             imagem_path (str):
+        Returns:
+            str: Temp image path.
         """
         temp_path: str = f"{imagem_path}_temp.jpg"
         
         img = Image.open(imagem_path)
-        img: Image.ImageFile.ImageFile = self.corret_dimensions(img)
-        img: Image.ImageFile.ImageFile = self.corret_format(img)
-        img.save(imagem_path, optimize=True, quality=85)
-    
-    def corret_dimensions(self, img: Image.ImageFile) -> Image.ImageFile.ImageFile:
-        """
+        img = self.corret_dimensions(img)
+        img = self.corret_format(img)
+        img.save(temp_path, optimize=True, quality=85)
         
+        return temp_path
+    
+    def corret_dimensions(self, img):
+        """
+        Resize the image if less than 500x500.
         Args:
             img (Image.ImageFile.ImageFile):
         Returns:
@@ -30,9 +36,9 @@ class CorretImageDimentions:
             img = img.resize((500, 500))
         return img
     
-    def corret_format(self, img: Image.ImageFile.ImageFile) -> Image.ImageFile.ImageFile:
+    def corret_format(self, img):
         """
-        
+        Convert to ['JPEG', 'JPG', 'PNG'] if it's in a diferent format. 
         Args:
             img (Image.ImageFile.ImageFile):
         Returns:

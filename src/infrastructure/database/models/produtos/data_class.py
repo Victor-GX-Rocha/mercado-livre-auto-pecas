@@ -1,4 +1,4 @@
-""" Dataclass model for produtos table """
+""" Dataclass model for produtos table. """
 
 from dataclasses import dataclass
 from typing import Optional

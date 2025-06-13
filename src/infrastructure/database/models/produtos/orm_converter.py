@@ -1,4 +1,4 @@
-""" Converter the Produtos ORM entity to a Product dataclass object """
+""" Converter the Produtos ORM entity to a Product dataclass object. """
 
 from .orm_entity import Produtos
 from .data_class import Product

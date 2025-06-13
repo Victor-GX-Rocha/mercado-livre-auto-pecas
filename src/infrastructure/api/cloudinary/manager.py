@@ -84,17 +84,17 @@ class CloudinaryManager:
         except Exception as e:
             raise RuntimeError(f"Erro ao configurar Cloudinary: {e}")
 
-def validate_login_details(self) -> None:
-    """
-    Valida se os detalhes de login do Cloudinary estão completos.
+# def validate_login_details(self) -> None:
+#     """
+#     Valida se os detalhes de login do Cloudinary estão completos.
     
-    Levanta uma exceção se alguma chave necessária estiver ausente.
-    """
-    try:
-        required_keys = ['cloud_name', 'api_key', 'api_secret']
-        for key in required_keys:
-            if key not in self.cloud_user:
-                raise ValueError(f"Detalhes de login do Cloudinary incompletos. Chave '{key}' ausente.")
-    except ValueError as v:
-        logging.warning(f"{v}")
+#     Levanta uma exceção se alguma chave necessária estiver ausente.
+#     """
+#     try:
+#         required_keys = ['cloud_name', 'api_key', 'api_secret']
+#         for key in required_keys:
+#             if key not in self.cloud_user:
+#                 raise ValueError(f"Detalhes de login do Cloudinary incompletos. Chave '{key}' ausente.")
+#     except ValueError as v:
+#         logging.warning(f"{v}")
 

@@ -1,6 +1,6 @@
 """ An interface to chose the url generator that will be used. """
 
-from .cloud import CloudinaryManagerForMeli
+from .cloud import CloudinaryImageUploader
 
 class UrlGeneratorFactory:
     """ Interface to select a Url generator. """
@@ -17,6 +17,6 @@ class UrlGeneratorFactory:
         """
         match generator.strip().lower():
             case "cloudinary":
-                return CloudinaryManagerForMeli()
+                return CloudinaryImageUploader()
             case _:
                 raise ValueError(f"{generator} não possui uma classe de geração de Url correspondente") 

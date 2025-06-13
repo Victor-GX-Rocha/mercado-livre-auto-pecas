@@ -57,7 +57,7 @@ class JsonGenerator:
         Todo:
             - [x] shipping.
             - [x] attributes.
-            - [ ] pictures (in process)
+            - [x] pictures.
             - [ ] category
         """
         
@@ -85,9 +85,6 @@ class JsonGenerator:
                 error=pictures.error
             )
         
-        """
-        Quanto ao ID, na verdade ainda falta ativar a classe do cloudinary!!!
-        """
         
         category = self.category_generator.create(product, token)
         if not category.success:
@@ -102,7 +99,7 @@ class JsonGenerator:
             self.template_json: dict[str, Any] = {
                 "site_id": "MLB",
                 "title": product.sale.titulo,
-                "category_id": category.result, Ainda falta criar isso
+                "category_id": category.result, #Ainda falta criar isso
                 "price": product.sale.preco,
                 "currency_id": 'BRL',
                 "available_quantity": product.sale.estoque,
