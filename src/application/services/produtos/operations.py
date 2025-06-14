@@ -1,23 +1,21 @@
-"""  """
+""" Product table operations. """
 
 from typing import Protocol, Any, runtime_checkable
 
-from ....infrastructure.api.mercadolivre.auth import AuthResponse
-from ....infrastructure.database.models.produtos import Product
-from ....infrastructure.database.repositories import ProdutosRepository
-from ...shared.validators import (
+from src.infrastructure.api.mercadolivre.auth import AuthResponse
+from src.infrastructure.database.models.produtos import Product
+from src.infrastructure.database.repositories import ProdutosRepository
+from src.application.shared.models import ValidationResponse
+from src.application.shared.validators import (
     ValidatorsProtocol,
     EmptyColumnsValidator, 
     EmptyCredentialColumnsValidator
 )
-from ...shared.models import ValidationResponse
 from .generators import JsonGenerator, JsonGeneratorResponse
 
 
 runtime_checkable
 class ProdutosOperation(Protocol):
-    # def __init__(self, repo: ProdutosRepository):
-    #     ...
     def execute(self, lines: list[Product], token: AuthResponse) -> None:
         ...
 

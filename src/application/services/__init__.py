@@ -1,6 +1,6 @@
 """ Application services. """
 
-from .produtos import ProdutosApplication
+from produtos.manager import ProdutosApplication
 
 __version__ = "v.0.0.0"
 __all__ = [

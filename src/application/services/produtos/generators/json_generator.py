@@ -7,48 +7,28 @@
 from typing import Any, Optional
 from dataclasses import dataclass
 
-from .....core.log import logging
-from .....infrastructure.database.models.produtos import Product
-from .....infrastructure.api.mercadolivre.auth import AuthResponse
+from src.core.log import logging
+from src.infrastructure.database.models.produtos import Product
+from src.infrastructure.api.mercadolivre.auth import AuthResponse
+from .category import CategoryGenerator
 from .attributes import AttributesGenerator
 from .pictures import PicturesGenerator, PicturesGeneratorResponse
 from .models import (
+    GeneratorProtocol,
     JsonGeneratorResponse,
     ShippimentGeneratorResponse
 )
 
-# @dataclass
-# class JsonGeneratorResponse:
-#     success: bool
-#     result: Optional[dict[str, Any]]
-#     error: list
-
-# @dataclass
-# class ShippimentGeneratorResponse:
-#     success: bool
-#     result: Optional[dict[str, Any]]
-#     error: list
-
-# @dataclass
-# class PicturesGeneratorResponse:
-#     success: bool
-#     result: Optional[dict[str, Any]]
-#     error: list
 
 class JsonGenerator:
     def __init__(self):
-        """
-        Args:
-            cloud (): Cloudinary API interface. 
-            # In the future, I need to think about this as any type of image uploader, not only cloudinary
-        """
         self.attribute_generator = AttributesGenerator()
         self.pictures_generator = PicturesGenerator()
         self.category_generator = CategoryGenerator()
     
     def build_publication_json(self, product: Product, token: AuthResponse) -> JsonGeneratorResponse:#dict[str, Any]:
         """
-        Construct a json with data for a publication on mercado libre.
+        Construct a json with publication data for.
         Args:
             product (Product): 
             token (AuthResponse): 
@@ -56,9 +36,17 @@ class JsonGenerator:
             (JsonGeneratorResponse):
         Todo:
             - [x] shipping.
+            - [ ] category
             - [x] attributes.
             - [x] pictures.
-            - [ ] category
+        """
+        
+        """
+        HMMMM... Thinking better about this, I already padronizate all generators responses. That means that I can use this as a factory or something like that. If I use a loop here I can aplly some DRY on it. 
+        For it I need to:
+            - Create a formally contrat with Protocol or abstract classes.
+            - Transform "build_shipping_info" into a "ShippimentGenerator"
+            - Create a Factory abstration. 
         """
         
         shipping = self.build_shipping_info(product)
@@ -69,7 +57,15 @@ class JsonGenerator:
                 error=shipping.error
             )
         
-        attributes = self.attribute_generator.create(product, token)
+        category = self.category_generator.generate(product, token)
+        if not category.success:
+            return JsonGeneratorResponse(
+                success=False,
+                result=None,
+                error=category.error
+            )
+        
+        attributes = self.attribute_generator.generate(product, token)
         if not attributes.success:
             return JsonGeneratorResponse(
                 success=False,
@@ -77,21 +73,12 @@ class JsonGenerator:
                 error=attributes.error
             )
         
-        pictures = self.pictures_generator.create(product, token)
+        pictures = self.pictures_generator.generate(product, token)
         if not pictures.success:
             return JsonGeneratorResponse(
                 success=False,
                 result=None,
                 error=pictures.error
-            )
-        
-        
-        category = self.category_generator.create(product, token)
-        if not category.success:
-            return JsonGeneratorResponse(
-                success=False,
-                result=None,
-                error=category.errors
             )
         
         try:

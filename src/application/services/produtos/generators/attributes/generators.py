@@ -3,10 +3,10 @@
 from typing import Protocol
 from abc import abstractmethod
 
-from ......infrastructure.database.models.produtos import Product
-from ......infrastructure.api.mercadolivre.auth import AuthResponse
+from src.infrastructure.database.models.produtos import Product
+from src.infrastructure.api.mercadolivre.auth import AuthResponse
 
-class GeneratorsProtocol(Protocol):
+class AttributesGeneratorsProtocol(Protocol):
     @abstractmethod
     def create(self, product: Product) -> list[dict]:
         """
@@ -18,14 +18,14 @@ class GeneratorsProtocol(Protocol):
         """
         pass
 
-class OriginGenerator(GeneratorsProtocol):
+class OriginGenerator(AttributesGeneratorsProtocol):
     """ Adds the origim of the part. """
     def create(self, product: Product) -> list[dict] | None:
         if origem := product.technical.origem:
             return [{"id": "ORIGIN", "value_name": origem}]
         return []
 
-class CompatibilityGenerator(GeneratorsProtocol):
+class CompatibilityGenerator(AttributesGeneratorsProtocol):
     def __init__(self):
         self.inserters: list = [
             self.insert_fuel_type,
@@ -55,7 +55,7 @@ class CompatibilityGenerator(GeneratorsProtocol):
             return [{"id": "INJECTION_TYPE", "value_name": tipo_injecao.split(',')}]
         return []
 
-class CodificationGenrator(GeneratorsProtocol):
+class CodificationGenrator(AttributesGeneratorsProtocol):
     def __init__(self):
         self.inserters: list = [
             self._cod_oem,
@@ -96,7 +96,7 @@ class CodificationGenrator(GeneratorsProtocol):
             return [{"id": "EMPTY_GTIN_REASON", "value_name": gtin_ausencia_motivo}]
         return [{"id": "EMPTY_GTIN_REASON", "value_name": "O produto não tem código cadastrado"}]
 
-class NomeationGenerator(GeneratorsProtocol):
+class NomeationGenerator(AttributesGeneratorsProtocol):
     def __init__(self):
         self.inserters: list = [
             self._marca,

@@ -11,9 +11,9 @@ from ...infrastructure.database.repositories.models import DataclassTable
 
 class MeliTokenManager:
     """ Gets and validation the creation of a token. """
-    def __init__(self, meli_auth: MeliAuthCredentials, repo: TableRepositoryProtocol):
-        self.auth = meli_auth
+    def __init__(self, repo: TableRepositoryProtocol, meli_auth: MeliAuthCredentials):
         self.repo = repo
+        self.auth = meli_auth
     
     def get_token(self, lines: list[DataclassTable]) -> Optional[AuthResponse]:
         """

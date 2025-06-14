@@ -1,8 +1,10 @@
 """ Generate the attributes list """
 
-from ......core.log import logging
-from ......infrastructure.database.models.produtos import Product
-from ......infrastructure.api.mercadolivre.auth import AuthResponse
+from src.core.log import logging
+from src.infrastructure.database.models.produtos import Product
+from src.infrastructure.api.mercadolivre.auth import AuthResponse
+
+from ..models import GeneratorProtocol
 
 from .validator import AttributesValidator
 from .models import (
@@ -12,7 +14,7 @@ from .models import (
     AttributesValidatorResponse
 )
 from .generators import (
-    GeneratorsProtocol,
+    AttributesGeneratorsProtocol,
     OriginGenerator,
     CompatibilityGenerator,
     CodificationGenrator,
@@ -20,9 +22,11 @@ from .generators import (
 )
 
 
-class AttributesGenerator:
+
+class AttributesGenerator(GeneratorProtocol):
+    """ Genrate the product attributes. """
     def __init__(self):
-        self.generators: list[GeneratorsProtocol] = [
+        self.generators: list[AttributesGeneratorsProtocol] = [
             OriginGenerator(),
             CompatibilityGenerator(),
             CodificationGenrator(),
@@ -30,7 +34,7 @@ class AttributesGenerator:
         ]
         self.validator = AttributesValidator()
     
-    def create(self, product: Product, token: AuthResponse) -> AttributesResponse:
+    def generate(self, product: Product, token: AuthResponse) -> AttributesResponse:
         """
         Create the product attributes.
         Args:

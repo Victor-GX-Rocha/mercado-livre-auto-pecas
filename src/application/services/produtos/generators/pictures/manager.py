@@ -2,12 +2,12 @@
 
 import os
 
-from ......core.log import logging
-from ......infrastructure.database.models.produtos import Product
-from ......infrastructure.api.mercadolivre.auth import AuthResponse
-from ......infrastructure.api.mercadolivre.images import MeliImageManager
-from ......infrastructure.api.mercadolivre.models import MeliResponse
-from ......infrastructure.api.cloudinary.manager import CloudinaryManager
+from src.core.log import logging
+from src.infrastructure.database.models.produtos import Product
+from src.infrastructure.api.mercadolivre.auth import AuthResponse
+from src.infrastructure.api.mercadolivre.images import MeliImageManager
+from src.infrastructure.api.mercadolivre.models import MeliResponse
+from src.infrastructure.api.cloudinary.manager import CloudinaryManager
 from .....shared.image_normalizer import ImageNormalizer
 from .url_generators import UrlGeneratorFactory 
 from .models import PicturesGeneratorResponse

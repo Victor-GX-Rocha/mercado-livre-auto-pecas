@@ -1,6 +1,6 @@
 """ Produtos operations Enviroment. """
 
-from .produtos import ProdutosApplication
+from .manager import ProdutosApplication
 
 __version__ = "v.0.0.0"
 __all__ = [

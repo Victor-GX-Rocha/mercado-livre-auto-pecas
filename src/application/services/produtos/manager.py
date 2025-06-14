@@ -1,11 +1,12 @@
 """ Execution flow of Produtos table operations. """
 
-from ....infrastructure.api.mercadolivre.client import MLBaseClient
-from ....infrastructure.api.mercadolivre.auth import AuthResponse, AuthManager, MeliAuthCredentials
-from ....infrastructure.database.models.produtos import Produtos, Product
-from ....infrastructure.database.repositories import ProdutosRepository
-from ...shared.oganizer import GroupBy
-from ...shared.token_manager import MeliTokenManager
+from src.infrastructure.api.mercadolivre.client import MLBaseClient
+from src.infrastructure.api.mercadolivre.auth import AuthResponse, AuthManager, MeliAuthCredentials
+from src.infrastructure.database.models.produtos import Produtos, Product
+from src.infrastructure.database.repositories import ProdutosRepository
+from src.application.shared.oganizer import GroupBy
+from src.application.shared.token_manager import MeliTokenManager
+
 from .generators.json_generator import JsonGenerator
 from .operations import (
     ProdutosOperation,
@@ -18,7 +19,6 @@ from .operations import (
 
 # meli_client = MLBaseClient()
 # auth_manager = AuthManager(meli_client)
-auth_manager = AuthManager()
 
 class OperationFactory:
     def __init__(self, repo, json_generator=None):
@@ -44,12 +44,9 @@ class OperationFactory:
 class ProdutosApplication:
     def __init__(self):
         self.repo = ProdutosRepository()
-        self.meli_auth = MeliAuthCredentials(auth_manager)
-        self.token_manager = MeliTokenManager(meli_auth=self.meli_auth, repo=self.repo)
-        self.operation_factory = OperationFactory(
-            repo=self.repo,
-            json_generator=JsonGenerator()
-        )
+        self.meli_auth = MeliAuthCredentials()
+        self.token_manager = MeliTokenManager(repo=self.repo, meli_auth=self.meli_auth)
+        self.operation_factory = OperationFactory(repo=self.repo, json_generator=JsonGenerator())
     
     def execute(self) -> None:
         pending_lines = self.repo.get.pending_operations()

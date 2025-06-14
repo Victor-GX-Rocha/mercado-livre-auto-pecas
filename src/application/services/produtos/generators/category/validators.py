@@ -1,14 +1,9 @@
-""" Validators for a category based on a Product line """
+""" Validators for a category based on a Product line. """
 
-from typing import Protocol, Any
+from typing import Any
 
-from .....infrastructure.database.models.produtos import Product
-from ....shared.models import ValidationResponse
-
-
-class CategoryValidateProtocol(Protocol):
-    def validate(self, produto: Product, category_data: list[str, Any]):
-        """ O padrão vai ser esse """
+from src.infrastructure.database.models.produtos import Product
+from .models import ValidationResponse, CategoryValidateProtocol
 
 
 class IsLeaf(CategoryValidateProtocol):
@@ -63,10 +58,8 @@ class TitleLength(CategoryValidateProtocol):
     """ Valida se o tamanho do título está dentro do permitido """
     def validate(self, produto: Product, category_data: list[str, Any]):
         max_title_length: int = category_data["settings"]["max_title_length"]
-        
         if not max_title_length:
             return ValidationResponse(True)
-        
         if len(produto.sale.titulo) > max_title_length:
             return ValidationResponse(reason=f"Tamanho do título excede o máximo permitido ({max_title_length})")
         return ValidationResponse(True)
@@ -115,7 +108,7 @@ class ShippingOptions(CategoryValidateProtocol):
 
 
 class Status:
-    """ Eu suspeito seriamente que isso diz respeito ao estado da categoria, se ainda está ativa ou não, se for o caso é um valor super importante. No exemplo que eu peguei está como "enabled" """
+    """ Eu suspeito seriamente que isso diz respeito ao estado da categoria, se ainda está ativa ou não, se for o caso é um valor super importante. No exemplo de json que eu peguei está como "enabled" """
     def validate(self, produto: Product, category_data: list[str, Any]):
         status = category_data["settings"]["status"]
         if status != "enabled":

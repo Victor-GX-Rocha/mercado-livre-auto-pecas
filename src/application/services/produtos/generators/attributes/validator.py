@@ -1,8 +1,8 @@
 """ Attribute validator based on category. """
 
-from ......infrastructure.database.models.produtos import Product
-from ......infrastructure.api.mercadolivre.auth import AuthResponse
-from ......infrastructure.api.mercadolivre.category import CategoryManager
+from src.infrastructure.database.models.produtos import Product
+from src.infrastructure.api.mercadolivre.auth import AuthResponse
+from src.infrastructure.api.mercadolivre.category import CategoryManager
 from .models import AttributesValidatorResponse
 
 

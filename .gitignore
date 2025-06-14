@@ -5,6 +5,7 @@ commands.sql
 *.json
 *.ipynb
 *.txt
-*sql
+*.sql
+*.log
 test
 scripts
