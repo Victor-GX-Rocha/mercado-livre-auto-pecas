@@ -1,5 +1,6 @@
 """ Validators for a category based on a Product line. """
 
+import re
 from typing import Any
 
 from src.infrastructure.database.models.produtos import Product
@@ -27,7 +28,7 @@ class ItemConditions(CategoryValidateProtocol):
     """ Valida se a condição do produto é permitida pela categoria """
     def validate(self, produto: Product, category_data: list[str, Any]):
         item_conditions: list = category_data["settings"]["item_conditions"]
-        if produto.sale.modo_compra not in item_conditions:
+        if produto.technical.condicao_produto not in item_conditions:
             return ValidationResponse(reason=f"Apenas as condições ({item_conditions}) são permitidas")
         return ValidationResponse(True)
 
@@ -49,7 +50,12 @@ class MaxPicturesPerItem(CategoryValidateProtocol):
         if not max_pictures_per_item:
             return ValidationResponse(True)
         
-        if  len(produto.sale.imagens) > max_pictures_per_item:
+        images = produto.sale.imagens
+        
+        if isinstance(images, str):
+            images = re.split(r"[;,]", produto.sale.imagens)
+        
+        if  len(images) > max_pictures_per_item:
             return ValidationResponse(reason=f"Quantidade de imagens excede o máximo permitido ({max_pictures_per_item})")
         return ValidationResponse(True)
 
@@ -116,20 +122,61 @@ class Status:
         return ValidationResponse(True)
 
 
-validators: list[CategoryValidateProtocol] = [
-    IsLeaf(),
-    BuyingModes(),
-    ItemConditions(),
-    MaxDescriptionLength(),
-    MaxDescriptionLength(),
-    MaxPicturesPerItem(),
-    TitleLength(),
-    MaximumPrice(),
-    MinimumPrice(),
-    Price(),
-    ShippingOptions(),
-    Status()
-]
+class CategoryValidator:
+    def __init__(self):
+        self.validators: list[CategoryValidateProtocol] = [
+            IsLeaf(),
+            BuyingModes(),
+            ItemConditions(),
+            MaxDescriptionLength(),
+            MaxDescriptionLength(),
+            MaxPicturesPerItem(),
+            TitleLength(),
+            MaximumPrice(),
+            MinimumPrice(),
+            Price(),
+            ShippingOptions(),
+            Status()
+        ]
+    
+    
+    def validate(self, product: Product, category_data: str):
+        causes: list = []
+        for validator in self.validators:
+            response = validator.validate(product, category_data)
+            if not response.is_valid:
+                causes.append(response.reason)
+        
+        if causes:
+            return ValidationResponse(
+                reason=f"Um total de {len(causes)} validadores recusaram a categoria.",
+                causes=causes
+            )
+        
+        return ValidationResponse(True)
+
+    # print(validar(product=produto, category_data=cat_data))
+
+
+
+
+
+
+
+# validators: list[CategoryValidateProtocol] = [
+#     IsLeaf(),
+#     BuyingModes(),
+#     ItemConditions(),
+#     MaxDescriptionLength(),
+#     MaxDescriptionLength(),
+#     MaxPicturesPerItem(),
+#     TitleLength(),
+#     MaximumPrice(),
+#     MinimumPrice(),
+#     Price(),
+#     ShippingOptions(),
+#     Status()
+# ]
 
 
 # def validar(product=produto, category_data=cat_data):

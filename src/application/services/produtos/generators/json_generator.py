@@ -83,10 +83,10 @@ class JsonGenerator:
         
         try:
             # Look for other information that can be entered here
-            self.template_json: dict[str, Any] = {
+            template_json: dict[str, Any] = {
                 "site_id": "MLB",
                 "title": product.sale.titulo,
-                "category_id": category.result, #Ainda falta criar isso
+                "category_id": category.result, # Ainda falta criar isso
                 "price": product.sale.preco,
                 "currency_id": 'BRL',
                 "available_quantity": product.sale.estoque,
@@ -100,8 +100,13 @@ class JsonGenerator:
                 "pictures": pictures.result
             }
             
+            return JsonGeneratorResponse(
+                success=True,
+                result=template_json
+            )
+            
         except Exception as e:
-            message: str = f"Excessão inesperada no processo de criação do JSON: {e}"
+            message: str = f"Falha inesperada no processo de criação do JSON: {e}"
             logging.error(message)
             return JsonGeneratorResponse(
                 success=False,
@@ -113,7 +118,9 @@ class JsonGenerator:
         """
         Build the shippiment data.
         Args:
-            product: 
+            product: Dataclass product table.
+        Returns:
+            ShippimentGeneratorResponse:
         """
         try:
             
@@ -133,9 +140,8 @@ class JsonGenerator:
             }
             
             return ShippimentGeneratorResponse(
-                success=False,
-                result=shipping_info,
-                error=[message]
+                success=True,
+                result=shipping_info
             )
             
         except Exception as e:

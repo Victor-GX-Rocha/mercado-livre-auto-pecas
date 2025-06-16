@@ -2,13 +2,13 @@
 
 from src.infrastructure.database.models.produtos import Product
 from src.infrastructure.api.mercadolivre.auth import AuthResponse
-from src.infrastructure.api.mercadolivre.category import CategoryManager
+from src.infrastructure.api.mercadolivre.category import CategoryRequests
 from .models import AttributesValidatorResponse
 
 
 class AttributesValidator:
     def __init__(self):
-        self.cat_manager = CategoryManager()
+        self.cat_manager = CategoryRequests()
     
     def validate(self, product: Product, attributes: list[dict], token: AuthResponse) -> AttributesValidatorResponse:
         """
@@ -20,7 +20,7 @@ class AttributesValidator:
         Returns:
             list[str]: A list alert messages about the missing category attributes. (If everything ok, returns a empty list).
         """
-        category_attributes = self.cat_manager.get_category_attributes(product.category.categoria, token.data.access_token)
+        category_attributes = self.cat_manager.get_category_attributes(product.category.categoria, token.access_token)
         
         if not category_attributes.success:
             return AttributesValidatorResponse(
@@ -33,7 +33,7 @@ class AttributesValidator:
         if misses: # If something is missing
             return AttributesValidatorResponse(
                 is_valid=False,
-                causes=misses
+                causes=[f"Atributos obrigatórios ausentes: {misses}"]
             )
         
         return AttributesValidatorResponse(

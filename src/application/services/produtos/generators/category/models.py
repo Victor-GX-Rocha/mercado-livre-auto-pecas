@@ -7,7 +7,14 @@ from src.infrastructure.database.models.produtos import Product
 
 @dataclass
 class ValidationResponse:
-    is_valid: bool = False 
+    is_valid: bool = False
+    reason: Optional[str] = None
+    causes: Optional[list] = None
+
+@dataclass
+class CategoryGeneratorValidationResponse:
+    is_valid: bool = False
+    id_used: str = None
     reason: Optional[str] = None
     causes: Optional[list] = None
 

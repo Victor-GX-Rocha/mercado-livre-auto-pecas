@@ -1,6 +1,6 @@
 """ Program applications. """
 
-from .services.produtos import ProdutosApplication
+from src.application.services.produtos import ProdutosApplication
 
 __version__ = "v.0.0.0"
 __all__ = [

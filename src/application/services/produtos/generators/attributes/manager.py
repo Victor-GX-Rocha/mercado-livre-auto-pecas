@@ -82,7 +82,6 @@ class AttributesGenerator(GeneratorProtocol):
                     message=f"Falha ao gerar atributo: {str(e)}",
                     severity="warning"
                 ))
-        print(attributes)
         if warnings:
             logging.warning(warnings)
         return attributes

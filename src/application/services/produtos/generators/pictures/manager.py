@@ -2,7 +2,7 @@
 
 import os
 
-from src.core.log import logging
+from src.core.log import logging, dev_log
 from src.infrastructure.database.models.produtos import Product
 from src.infrastructure.api.mercadolivre.auth import AuthResponse
 from src.infrastructure.api.mercadolivre.images import MeliImageManager
@@ -26,9 +26,9 @@ class PicturesGenerator:
         self.correct_image = CorretImageProperties()
         self.meli_image_manager = MeliImageManager()
     
-    def create(self, product: Product, token: AuthResponse) -> PicturesGeneratorResponse:
+    def generate(self, product: Product, token: AuthResponse) -> PicturesGeneratorResponse:
         """
-        Create a list of meli picutures IDs.
+        Generate a list of meli picutures IDs.
         Args:
             product (Product): 
             token (AuthResponse): Meli token for upload url request.
@@ -52,6 +52,7 @@ class PicturesGenerator:
             return self.__create_meli_ids(url_response.result, token)
             
         except Exception as e:
+            dev_log.exception(e)
             return PicturesGeneratorResponse(
                 success=False,
                 result=None,
@@ -119,7 +120,7 @@ class PicturesGenerator:
             meli_picture_id = self.__upload_url(url.data.url, token)
             if not meli_picture_id.success:
                 failed_pictures_ids.append(f"url: {url.data.url}, causa: {meli_picture_id.error.message}")
-            meli_pictures_ids.append(meli_picture_id.result.get("id")) # Gets the meli image id
+            meli_pictures_ids.append({"id": meli_picture_id.result.get("id")}) # Gets the meli image id
             self.url_generator.delete_image(url.data.id) # Removes the online image from account
             
         if failed_pictures_ids:
@@ -146,7 +147,7 @@ class PicturesGenerator:
         Returns:
             MeliResponse: Response with the IDs content.
         """
-        meli_id_response = self.meli_image_manager.get_meli_picture(image_url=url, access_token=token.data.access_token)
+        meli_id_response = self.meli_image_manager.get_meli_picture(image_url=url, access_token=token.access_token)
         
         if not meli_id_response.success:
             logging.error(f"{meli_id_response.error.message}. Exception: {meli_id_response.error.exception}")
@@ -155,8 +156,6 @@ class PicturesGenerator:
                 result=None,
                 error=meli_id_response.error
             )
-        
-        print(f"{meli_id_response.data = }")
         
         return PicturesGeneratorResponse(
             success=True,

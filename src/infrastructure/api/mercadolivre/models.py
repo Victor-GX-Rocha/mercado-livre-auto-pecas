@@ -6,11 +6,17 @@ from typing import Optional, Any, Union, Literal
 
 # Define contextos válidos e já evita erros de digitação tlg
 MeliContext = Literal[
+    "RequestException",
+    "UnspectedException"
     "auth",
+    "category_root_types",
     "category_data",
     "category_attributes",
-    "RequestException",
-    "image_upload"
+    "image_upload",
+    "item_publication",
+    "item_description",
+    "item_editation"
+    
     # "product_publish", 
     # "product_update",
     # "category_management",
@@ -26,15 +32,12 @@ class MeliErrorDetail:
     code: Optional[int] = None              # Código específico do Mercado Livre 
     http_status: Optional[int] = None       # Código de resposta http
     exception: Optional[Exception] = None   # Exceção original (para logs)
+    details: Optional[str] = None
 
 @dataclass
 class MeliResponse:
-    """ Método padronizado de retorno a uma request do mercado livre. """
+    """ Model for mercado libre request responses. """
     success: bool
     data: Optional[Any] = None
     error: Optional[MeliErrorDetail] = None
     http_status: Optional[int] = None
-    
-    # @property
-    # def is_success(self) -> bool:
-    #     return self.success and self.error is None

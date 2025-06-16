@@ -1,10 +1,10 @@
-"""  """
+""" Provides category requests.  """
 
-from .manager import CategoryManager
+from .manager import CategoryRequests
 
 __version__ = "v.0.0.1"
 __all__ = [
     "__version__",
     
-    "CategoryManager"
+    "CategoryRequests"
 ]
