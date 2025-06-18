@@ -8,7 +8,7 @@ from .config import AppConfigManager
 config = AppConfigManager()
 database_config = config.load_database_config()
 
-from .application.services import ProdutosApplication
+from .app.services import ProdutosApplication
 
 app_produtos = ProdutosApplication()
 
