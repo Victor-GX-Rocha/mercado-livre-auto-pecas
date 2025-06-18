@@ -6,6 +6,7 @@ from typing import Protocol, Any, runtime_checkable
 from src.infrastructure.api.mercadolivre.auth import AuthResponse
 from src.infrastructure.api.mercadolivre.items import ItemsRequests
 from src.infrastructure.api.mercadolivre.models import MeliResponse
+from src.infrastructure.api.mercadolivre.catalog_compatibilities import CatalogCompatibilitiesRequests
 from src.infrastructure.database.models.produtos import Product
 from src.infrastructure.database.repositories import ProdutosRepository
 from src.application.shared.models import ValidationResponse
@@ -15,6 +16,7 @@ from src.application.shared.validators import (
     EmptyCredentialColumnsValidator
 )
 from .generators import JsonGenerator, JsonGeneratorResponse
+
 
 
 
@@ -29,6 +31,7 @@ class Publication(ProdutosOperation):
         self.repo = repo
         self.json_generator = JsonGenerator()
         self.items_requests = ItemsRequests()
+        self.comp_requests = CatalogCompatibilitiesRequests()
         self.validators: list[ValidatorsProtocol] = [
             EmptyCredentialColumnsValidator(),
             EmptyColumnsValidator([
@@ -40,39 +43,47 @@ class Publication(ProdutosOperation):
     
     def execute(self, lines: list[Product], token: AuthResponse) -> None:
         """
-        - [x] Validate
-        - [x] Create the json
-        - [x] Publish
-        - [x] Add a description
-        - [ ] Add compatibility
-        - [ ] Update the database
+        Publish a product on mercado libre.
+        Args:
+            lines (list[Product]): Database product line as a dataclass.
+            token (AuthResponse): Token object with access token.
+        Todo:
+            - [x] Validate
+            - [x] Create the json
+            - [x] Publish
+            - [x] Add a description
+            - [x] Add compatibility
+            - [x] Update the database
         """
         print(f"Executando {self.__class__.__name__}")
         
         for line in lines:
-            if not self.validate(line):
+            if not self._validate(line):
                 continue
             
-            json_response: JsonGeneratorResponse = self.create_json(line, token)
+            json_response: JsonGeneratorResponse = self.__create_json(line=line, token=token)
             if not json_response.success:
                 continue
             
-            publication_response: MeliResponse = self.publish(line, token.access_token, publication_data=json_response.result)
+            publication_response: MeliResponse = self.__publish(line, token.access_token, publication_data=json_response.result)
             if not publication_response.success:
                 continue
             
-            description_response: MeliResponse = self.add_description(line=line, access_token=token.access_token)
+            description_response: MeliResponse = self.__add_description(line=line, access_token=token.access_token)
             if not description_response.success:
                 continue
             
-            compatibility_response = self.add_compatibility(line=line, access_token=token.access_token)
+            compatibility_response: MeliResponse = self.__add_compatibility(
+                line=line, 
+                access_token=token.access_token, 
+                publication_data=json_response.result
+            )
             if not compatibility_response.success:
                 continue
             
-            self.register_publication_success()
-
+            self.__register_publication_success(line=line, publication_data=publication_response.data)
     
-    def create_json(self, line: Product, token: AuthResponse) -> JsonGeneratorResponse:
+    def __create_json(self, line: Product, token: AuthResponse) -> JsonGeneratorResponse:
         """
         Creates a dictionary with publication data.
         Args:
@@ -85,7 +96,7 @@ class Publication(ProdutosOperation):
             self.repo.update.log_error(line.id, cod_erro=89, log_erro=json_response.error)
         return json_response
     
-    def publish(self, line: Product, access_token: str, publication_data: dict[str, Any]) -> MeliResponse:
+    def __publish(self, line: Product, access_token: str, publication_data: dict[str, Any]) -> MeliResponse:
         """
         Publish a the current product on mercado libre.
         Args:
@@ -108,7 +119,7 @@ class Publication(ProdutosOperation):
         
         return publication_response
     
-    def add_description(self, line: Product, access_token: str) -> MeliResponse:
+    def __add_description(self, line: Product, access_token: str) -> MeliResponse:
         """
         Adds the product description.
         Args:
@@ -128,9 +139,43 @@ class Publication(ProdutosOperation):
         
         return descripition_response
     
-    def add_compatibility(self):...
+    def __add_compatibility(self, line: Product, access_token: str, publication_data: dict) -> MeliResponse:
+        """
+        Adds a list of compatibilities to the product.
+        Args:
+            line Product: Product dataclass table line.
+            access_token (str): Access token to publish the product.
+            publication_data (dict[str, Any]): Product data.
+        Returns:
+            MeliResponse:
+        """
+        
+        product_id: str = publication_data["id"]
+        
+        compatibilities_response = self.comp_requests.get_compatibilities(
+            access_token=access_token,
+            brand_ids=line.technical.marcas_ids,
+            model_ids=line.technical.modelos_ids,
+        )
+        
+        if not compatibilities_response.success:
+            self.repo.update.log_error(line.id, cod_erro=89, log_erro=compatibilities_response.error)
+            return compatibilities_response
+        
+        compatibilities_ids: list[str] = [result["id"] for result in compatibilities_response.data["results"]]
+        
+        compatibility_addition_response = self.items_requests.add_compatibilities(
+            access_token=access_token, 
+            product_id=product_id, 
+            items_ids=compatibilities_ids
+        )
+        
+        if not compatibility_addition_response.success:
+            self.repo.update.log_error(line.id, cod_erro=89, log_erro=compatibility_addition_response.error)
+        
+        return compatibility_addition_response
     
-    def validate(self, line: Product) -> bool:
+    def _validate(self, line: Product) -> bool:
         """
         Vaidate if the product is able to be updloaded.
         Args:
@@ -148,7 +193,7 @@ class Publication(ProdutosOperation):
             return False
         return True
     
-    def register_publication(self, ml_id: str, link: str, cod_produto: str) -> None:
+    def __register_publication(self, ml_id: str, link: str, cod_produto: str) -> None:
         """
         
         Args:
@@ -165,12 +210,34 @@ class Publication(ProdutosOperation):
             log_file.write(f"Ml ID: {ml_id}\n")
             log_file.write(f"Link: {link}\n")
             log_file.write("----------" * 4 + "\n")
-
-    def register_publication_success(self):
-        self.register_publication()
-        self.repo.update.publication_success(line.id, status_operacao_id=2, categoria=publication_response.get("category_id"))
-        # self.add_compatibility()
-        ## self.update the database
+    
+    def __register_publication_success(self, line: Product, publication_data: dict) -> None:
+        """
+        Register the publication results on the database.
+        Args:
+            line (Product):
+            publication_data (dict):
+        """
+        ml_id: str = publication_data.get("id", "Ml ID não retornado")
+        link: str = publication_data.get("permalink", "Link não encontrado")
+        cod_produto: str = line.identfiers.cod_produto
+        category_id: str = publication_data.get("category_id")
+        status: str = publication_data.get("status")
+        
+        self.__register_publication(
+            ml_id=ml_id, 
+            link=link, 
+            cod_produto=cod_produto
+        )
+        
+        self.repo.update.publication_success(
+            line.id,
+            ml_id_produto=ml_id,
+            categoria=category_id,
+            link_publicacao=link,
+            produto_status=status,
+            status_operacao_id=2
+        )
 
 class Edition(ProdutosOperation):
     def __init__(self, repo: ProdutosRepository, json_generator: JsonGenerator):

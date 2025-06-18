@@ -50,7 +50,7 @@ class MLBaseClient:
                     code=self.__get_error_code(exc.response),
                     http_status=exc.response.status_code,
                     exception=exc,
-                    details=response.text
+                    details=response.text if response != None else None
                 )
             )
             
@@ -63,7 +63,7 @@ class MLBaseClient:
                     context="RequestException",
                     code=1000,  # Código interno para erros de rede
                     exception=exc,
-                    details=response.text
+                    details=response.text if response != None else None
                 )
             )
             
@@ -76,7 +76,7 @@ class MLBaseClient:
                     context="UnspectedException",
                     code=9999,
                     exception=exc,
-                    details=response.text
+                    details=response.text if response != None else None
                 )
             )
     

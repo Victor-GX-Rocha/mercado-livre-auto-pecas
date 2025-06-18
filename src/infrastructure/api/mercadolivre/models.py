@@ -1,10 +1,9 @@
-""" Guarda os modelos que serão utilizados pelos recursos do associados a comunicação com o mercado livre """
+""" Mercado libre requets models. """
 
 from dataclasses import dataclass
-from typing import Optional, Any, Union, Literal
+from typing import Optional, Any, Literal
 
 
-# Define contextos válidos e já evita erros de digitação tlg
 MeliContext = Literal[
     "RequestException",
     "UnspectedException"
@@ -15,23 +14,22 @@ MeliContext = Literal[
     "image_upload",
     "item_publication",
     "item_description",
-    "item_editation"
-    
-    # "product_publish", 
-    # "product_update",
-    # "category_management",
-    # "order_processing"
+    "item_editation",
+    "items_listing",
+    "item_add_compatibilities"
+    "get_models_by_brand",
+    "get_compatibilities"
 ]
 
 
 @dataclass
 class MeliErrorDetail:
-    """ Guarda as informalções de erro associadas a uma request ao mercado livre. """
-    message: str                            # Mensagem amigável para UI
-    context: Optional[MeliContext]          # Contexto da operação (ex: "auth")
-    code: Optional[int] = None              # Código específico do Mercado Livre 
-    http_status: Optional[int] = None       # Código de resposta http
-    exception: Optional[Exception] = None   # Exceção original (para logs)
+    """ Keep mercado libre request error informations. """
+    message: str
+    context: Optional[MeliContext]
+    code: Optional[int] = None
+    http_status: Optional[int] = None
+    exception: Optional[Exception] = None
     details: Optional[str] = None
 
 @dataclass

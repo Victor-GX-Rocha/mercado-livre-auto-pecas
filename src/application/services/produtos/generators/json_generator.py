@@ -36,7 +36,7 @@ class JsonGenerator:
             (JsonGeneratorResponse):
         Todo:
             - [x] shipping.
-            - [ ] category
+            - [x] category
             - [x] attributes.
             - [x] pictures.
         """
