@@ -19,7 +19,7 @@ from .data_class import (
 )
 
 
-@dataclass
+# @dataclass
 class Produtos(Base):
     __tablename__: str = "produtos"
     
@@ -36,10 +36,10 @@ class Produtos(Base):
     redirect_uri: Mapped[str] = mapped_column(String(256))
     refresh_token: Mapped[str] = mapped_column(String(256))
     credentials = composite(MeliCredentials, 
-        client_id,
-        client_secret,
-        redirect_uri,
-        refresh_token,
+        "client_id",
+        "client_secret",
+        "redirect_uri",
+        "refresh_token",
         deferred=False
     )
     
@@ -53,23 +53,23 @@ class Produtos(Base):
     
     cod_erro: Mapped[int] = mapped_column(Integer)
     log_erro: Mapped[str] = mapped_column(Text)
-    error_logers = composite(ErrorLoggers, cod_erro, log_erro)
+    error_logers = composite(ErrorLoggers, "cod_erro", "log_erro")
     
     cod_produto: Mapped[str] = mapped_column(String(16))
     sku: Mapped[str] = mapped_column(String(64))
     ml_id_produto: Mapped[str] = mapped_column(String(32))
     link_publicacao: Mapped[str] = mapped_column(Text)
     identfiers = composite(Identifiers, 
-        cod_produto,
-        sku,
-        ml_id_produto,
-        link_publicacao,
+        "cod_produto",
+        "sku",
+        "ml_id_produto",
+        "link_publicacao",
         deferred=False
     )
     
     titulo: Mapped[str] = mapped_column(Text)
     descricao: Mapped[str] = mapped_column(Text)
-    imagens: Mapped[list] = mapped_column(String(1024))
+    imagens: Mapped[str] = mapped_column(String(1024))
     estoque: Mapped[int] = mapped_column(Integer)
     preco: Mapped[float] = mapped_column(Numeric(10, 2)) #numeric(10, 2)
     moeda: Mapped[str] = mapped_column(String(4), default="MLB") #'MLB'::character varying,
@@ -77,15 +77,15 @@ class Produtos(Base):
     modo_compra: Mapped[str] = mapped_column(String(32))
     termo_garantia: Mapped[str] = mapped_column(String(32))
     sale = composite(SaleData, 
-        titulo,
-        descricao,
-        imagens,
-        estoque,
-        preco,
-        moeda,
-        tipo_anuncio,
-        modo_compra,
-        termo_garantia,
+        "titulo",
+        "descricao",
+        "imagens",
+        "estoque",
+        "preco",
+        "moeda",
+        "tipo_anuncio",
+        "modo_compra",
+        "termo_garantia",
         deferred=False
     )
     
@@ -95,11 +95,11 @@ class Produtos(Base):
     retirada_local: Mapped[bool] = mapped_column(Boolean)
     frete_gratis: Mapped[bool] = mapped_column(Boolean)
     shippiment = composite(ShippimentData, 
-        modo_envio,
-        logistica,
-        modo_envio_logistica,
-        retirada_local,
-        frete_gratis,
+        "modo_envio",
+        "logistica",
+        "modo_envio_logistica",
+        "retirada_local",
+        "frete_gratis",
         deferred=False
     )
     
@@ -108,10 +108,10 @@ class Produtos(Base):
     categoria_exemplo: Mapped[str] = mapped_column(String(1024))
     categoria_caminho: Mapped[str] = mapped_column(String(2048))
     category = composite(CategoryData, 
-        categoria,
-        categoria_id,
-        categoria_exemplo,
-        categoria_caminho,
+        "categoria",
+        "categoria_id",
+        "categoria_exemplo",
+        "categoria_caminho",
         deferred=False
     )
     
@@ -131,21 +131,21 @@ class Produtos(Base):
     modelos_ids: Mapped[str] = mapped_column(String(128))
     anos_ids: Mapped[str] = mapped_column(String(128))
     technical = composite(TechnicalData, 
-        marca,
-        condicao_produto,
-        gtin,
-        gtin_ausencia_motivo,
-        numero_peca,
-        num_inmetro,
-        cod_oem,
-        modelo,
-        tipo_veiculo,
-        tipo_combustivel,
-        tem_compatibilidade,
-        origem,
-        marcas_ids,
-        modelos_ids,
-        anos_ids,
+        "marca",
+        "condicao_produto",
+        "gtin",
+        "gtin_ausencia_motivo",
+        "numero_peca",
+        "num_inmetro",
+        "cod_oem",
+        "modelo",
+        "tipo_veiculo",
+        "tipo_combustivel",
+        "tem_compatibilidade",
+        "origem",
+        "marcas_ids",
+        "modelos_ids",
+        "anos_ids",
         deferred=False
     )
     
@@ -154,10 +154,10 @@ class Produtos(Base):
     comprimento: Mapped[int] = mapped_column(Integer)
     peso: Mapped[int] = mapped_column(Integer)
     dimensions = composite(DimensionsData, 
-        altura, 
-        largura, 
-        comprimento, 
-        peso,
+        "altura", 
+        "largura", 
+        "comprimento", 
+        "peso",
         deferred=False
     )
     

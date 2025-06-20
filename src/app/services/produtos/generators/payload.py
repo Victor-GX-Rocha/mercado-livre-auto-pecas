@@ -92,3 +92,49 @@ class PayloadGenerator:
                 result=None,
                 error=[message]
             )
+    
+    def build_edition_payload(
+            self, 
+            product: Product,
+            product_data: dict[str, Any],
+            token: AuthResponse
+        ) -> PayloadGeneratorResponse:
+        """ Basicly, do some validations to only atualize something if it's really necessary. """
+        template_payload: dict[str, str] = {}
+        
+        try:
+            
+            if product.sale.preco != product_data.get("price"):
+                template_payload.update({"price": float(product.sale.preco)})
+            
+            if product.sale.estoque != product_data.get("available_quantity"):
+                template_payload.update({"available_quantity": product.sale.estoque})
+            
+            if product.sale.modo_compra != product_data.get("buying_mode"):
+                template_payload.update({"buying_mode": product.sale.modo_compra})
+            
+            if product.technical.condicao_produto != product_data.get("condition"):
+                template_payload.update({"condition": product.technical.condicao_produto})
+            
+            if product.identfiers.sku != product_data.get("seller_custom_field"):
+                template_payload.update({"seller_custom_field": product.identfiers.sku})
+            
+            shipping = self.shipping_generator.generate(product, token)
+            if shipping.success:
+                template_payload.update({"shipping": shipping.result})
+            
+            pictures = self.pictures_generator.generate(product, token)
+            if pictures.success:
+                template_payload.update({"pictures": pictures.result})
+            
+            return PayloadGeneratorResponse(
+                success=True,
+                result=template_payload
+            )
+            
+        except Exception as e:
+            return PayloadGeneratorResponse(
+                success=False,
+                result=template_payload,
+                error=f"Exceção inesperada ao criar payload de edição: {e}"
+            )

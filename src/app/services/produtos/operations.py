@@ -259,11 +259,95 @@ class Publication(ProdutosOperation):
         print(f"self.repo.update.publication_success")
 
 class Edition(ProdutosOperation):
-    def __init__(self, repo: ProdutosRepository, payload_generator: PayloadGenerator):
+    def __init__(
+        self, 
+        repo: ProdutosRepository,
+        items_requests: ItemsRequests,
+        payload_generator: PayloadGenerator
+    ) -> None:
         self.repo = repo
+        self.items_requests = items_requests
+        self.payload_generator = payload_generator
+        
     
     def execute(self, lines: list[Product], token: AuthResponse) -> None:
         print(f"Executando {self.__class__.__name__}")
+        
+        for line in lines:
+            fails: list[str] = []
+            
+            # Pause:
+            pause_response: MeliResponse = self.items_requests.edit(
+                access_token=token.access_token,
+                item_id=line.identfiers.ml_id_produto,
+                edition_data={"status":"paused"}
+            )
+            
+            log.dev.info(f"[BD-ID {line.id}] Pausando o produto")
+            if not pause_response.success:
+                log.dev.exception(str(pause_response))
+                self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=pause_response.error)
+                return
+            
+            
+            # Editing:
+            
+            # - Change description
+            get_description_response = self.items_requests.get_description(
+                access_token=token.data.access_token,
+                item_id=line.identfiers.ml_id_produto
+            )
+            
+            if get_description_response.success:
+                if line.sale.descricao == get_description_response.data.get("plain_text"):
+                    description_response = self.items_requests.add_description(
+                        access_token=token.access_token, 
+                        item_id=line.identfiers.ml_id_produto,
+                        descrption=line.sale.descricao
+                    )
+                    if not description_response.success:
+                        log.user.warning(f"Falha no processo de mudança da descrição: {description_response.error}")
+                        fails.append(description_response.error)
+            
+            
+            # - Change another data
+            
+            # - - Get product data
+            product_data_response: MeliResponse = self.items_requests.get_item_info(
+                access_token=token.access_token,
+                item_id=line.identfiers.ml_id_produto
+            )
+            
+            if product_data_response.success:
+                
+                edition_payload: PayloadGeneratorResponse = self.payload_generator.build_edition_payload(
+                    product=line,
+                    product_data=product_data_response.data,
+                    token=token
+                )
+                
+                if not edition_payload.success:
+                    log.user.warning(f"Falha no processo de edição dos dados do produto: {edition_payload.error}")
+                    fails.append(edition_payload.error)
+            else:
+                log.user.warning(f"Falha no processo de obter dados do produto: {product_data_response.error}")
+                fails.append(product_data_response.error)
+            
+            
+            # Reactivating:
+            activate_response: MeliResponse = self.items_requests.edit(
+                access_token=token.access_token,
+                item_id=line.identfiers.ml_id_produto,
+                edition_data={"status":"active"}
+            )
+            
+            log.dev.info(f"[BD-ID {line.id}] Reativando o produto")
+            if not activate_response.success:
+                log.user.warning(str(activate_response))
+                fails.append(f"Falha no processo de reativação produto {activate_response.error}")
+            
+            if fails:
+                self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=pause_response.error)
 
 
 # Turn back to here to apply DRY in this classes
@@ -279,7 +363,8 @@ class Pause(ProdutosOperation):
         self.validators: list[ValidatorsProtocol] = [
             EmptyCredentialColumnsValidator(),
             EmptyColumnsValidator([
-                "produto_status"
+                # "produto_status"
+                "identfiers.ml_id_produto"
             ])
         ]
         self.oper_status: str = "paused"
@@ -354,7 +439,8 @@ class Activation(ProdutosOperation):
         self.validators: list[ValidatorsProtocol] = [
             EmptyCredentialColumnsValidator(),
             EmptyColumnsValidator([
-                "produto_status"
+                # "produto_status"
+                "identfiers.ml_id_produto"
             ])
         ]
         self.oper_status: str = "active"
@@ -396,7 +482,7 @@ class Activation(ProdutosOperation):
         
         log.user.info(f"[DB-ID: {line.id} | Cod: {line.identfiers.cod_produto}] Produto {self.log_action_name} com sucesso!")
         line.produto_status = status_product
-        self.repo.update.pause_success(line.id, line.produto_status)
+        self.repo.update.activation_success(line.id, line.produto_status)
     
     def _validate(self, line: Product) -> bool:
         """
@@ -418,11 +504,102 @@ class Activation(ProdutosOperation):
         return True
 
 class Deletation(ProdutosOperation):
-    def __init__(self, repo: ProdutosRepository):
+    def __init__(
+        self, 
+        repo: ProdutosRepository, 
+        items_requests: ItemsRequests
+    ) -> None:
         self.repo = repo
+        self.items_requests = items_requests
+        self.validators: list[ValidatorsProtocol] = [
+            EmptyCredentialColumnsValidator(),
+            EmptyColumnsValidator([
+                # "produto_status"
+                "identfiers.ml_id_produto"
+            ])
+        ]
+        self.oper_status: str = "deleted"
+        self.log_action_name: str = "excluído"
     
     def execute(self, lines: list[Product], token: AuthResponse) -> None:
         print(f"Executando {self.__class__.__name__}")
-        # When I try to edit a product, I need to verify if his status is the same of the editatiton that I'm doing!
-        # There is possible that the request works, but the status is not changed.
-
+        for line in lines:
+            self.delete(line=line, access_token=token.access_token)
+    
+    def delete(self, line: Product, access_token: str) -> None:
+        """
+        Delete a product on mercado libre.
+        Args:
+            line Product: Product dataclass table line.
+            access_token (str): Access token to delete the product.
+        """
+        
+        if not self._validate(line):
+            return
+        
+        print(self.oper_status)
+        causes: list[str] = []
+        
+        closed_response: MeliResponse = self.items_requests.edit(
+            access_token=access_token,
+            item_id=line.identfiers.ml_id_produto,
+            edition_data={"status": "closed"}
+        )
+        
+        if not closed_response.success:
+            log.dev.exception(str(closed_response))
+            causes.append(str(closed_response.error))
+            # self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=closed_response.error)
+        
+        print("closed_response:", closed_response.success)
+        
+        # Delete response
+        
+        delete_response: MeliResponse = self.items_requests.edit(
+            access_token=access_token,
+            item_id=line.identfiers.ml_id_produto,
+            edition_data={"deleted": "true"}
+        )
+        
+        if not delete_response.success:
+            log.dev.exception(str(delete_response))
+            causes.append(str(delete_response.error))
+            self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=causes)
+            return
+        
+        
+        if not delete_response.data:
+            return
+        
+        
+        status_product: str = delete_response.data.get("status")
+        print(f"{status_product = }")
+        print(f"{delete_response.data.get("deleted") = }")
+        
+        if status_product not in ("closed", "deleted"):
+            self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=delete_response.error)
+            return
+        
+        
+        log.user.info(f"[DB-ID: {line.id} | Cod: {line.identfiers.cod_produto}] Produto deletado com sucesso!")
+        line.produto_status = status_product
+        self.repo.update.deletation_success(line.id, line.produto_status)
+    
+    def _validate(self, line: Product) -> bool:
+        """
+        Vaidate if the product is able to be deleted.
+        Args:
+            line (Product): 
+        Returns:
+            bool: True if valid, else False.
+        """
+        causes: list = []
+        for validator in self.validators:
+            response = validator.validate(line)
+            if not response.is_valid:
+                causes.append(response.causes)
+        if causes:
+            log.user.warning(f"{causes}")
+            self.repo.update.log_error(line.id, cod_erro=88, log_erro=causes)
+            return False
+        return True

@@ -29,7 +29,7 @@ class MainLoop:
                 # Applications
                 app_produtos.execute()
                 time.sleep(app_config.timer)
-                break
+                # break
         except KeyboardInterrupt as k:
             log.user.info(f"Programa desligado manualmente pelo usuário {k}")
         except Exception as e:

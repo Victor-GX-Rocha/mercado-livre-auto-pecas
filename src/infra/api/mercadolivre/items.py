@@ -37,7 +37,7 @@ class ItemsRequests:
     
     def add_description(self, access_token: str, item_id: str, descrption: str) -> MeliResponse:
         """
-        Publish a product on mercado libre.
+        Add a description to a product on mercado libre.
         Args:
             access_token (str): Access token to publish the product.
             item_id (str): Item ID.
@@ -60,6 +60,29 @@ class ItemsRequests:
             context="item_description",
             headers=headers,
             json=payload
+        )
+        
+        return response
+    
+    def get_description(self, access_token: str, item_id: str) -> MeliResponse:
+        """
+        Get a description to a product on mercado libre.
+        Args:
+            access_token (str): Access token to publish the product.
+            item_id (str): Item ID.
+            descrption (str): Item descritpion.
+        Returns:
+            MeliResponse:
+        """
+        
+        headers: dict[str, str] = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        
+        response: MeliResponse = self.client.get(
+            endpoint=f"/items/{item_id}/description",
+            context="item_description",
+            headers=headers
         )
         
         return response
@@ -112,12 +135,18 @@ class ItemsRequests:
         
         return response
     
-    def get_items_info(self, access_token: str, items_list: list) -> MeliResponse:
+    def get_items_info(self, access_token: str, items_list: str) -> MeliResponse:
         """
         List the items form a user on mercado libre.
         Args:
             access_token (str): Access token to edit the product.
-            items_list (str): User ID.
+            items_list (str): A "list" of meli products IDs, turned into str.
+        Example:
+            >>> items_list: list[str] = ["MLB78248", "MLB869448"]
+            >>> items_str_list: str = ",".join(items_list)
+            ... "MLB78248,MLB869448"
+            >>> get_items_info(access_token, items_list=items_str_list)
+            ... MeliResponse(success=True, data=[{"id":...}, {...}]...
         Returns:
             MeliResponse:
         """
@@ -128,7 +157,29 @@ class ItemsRequests:
         
         response: MeliResponse = self.client.get(
             endpoint=f"/items?ids={items_list}",
-            context="items_listing",
+            context="get_items_info",
+            headers=headers
+        )
+        
+        return response
+    
+    def get_item_info(self, access_token: str, item_id: str) -> MeliResponse:
+        """
+        Get the data from of a product on mercado libre.
+        Args:
+            access_token (str): Access token to edit the product.
+            item_id (str): Item ID.
+        Returns:
+            MeliResponse:
+        """
+        
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        
+        response: MeliResponse = self.client.get(
+            endpoint=f"/items/{item_id}",
+            context="get_item_info",
             headers=headers
         )
         

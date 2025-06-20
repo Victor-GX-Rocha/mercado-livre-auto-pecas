@@ -35,7 +35,7 @@ class ShippingGenerator(GeneratorProtocol):
                 "dimensions": dimensions,
                 "local_pick_up": product.shippiment.retirada_local,
                 "free_shipping": product.shippiment.frete_gratis,
-                "logistic_type": "logistic_type"  # 'drop_off'
+                "logistic_type": product.shippiment.modo_envio_logistica #"logistic_type"  # 'drop_off'
             }
             
             return ShippingGeneratorResponse(

@@ -23,26 +23,26 @@ class OperationFactory:
     def __init__(
         self, 
         repo: ProdutosRepository, 
-        json_generator: PayloadGenerator = None,
+        payload_generator: PayloadGenerator = None,
         items_requests: ItemsRequests = None
     ) -> ProdutosOperation:
         self.repo = repo
-        self.json_generator = json_generator
+        self.payload_generator = payload_generator
         self.items_requests = items_requests
     
     def create(self, operation_id: int) -> ProdutosOperation:
         match operation_id:
             case 1:
-                # return Publication(self.repo, self.json_generator)
-                return Publication(self.repo, self.json_generator, self.items_requests)
+                # return Publication(self.repo, self.payload_generator)
+                return Publication(self.repo, self.payload_generator, self.items_requests)
             case 3:
-                return Edition(self.repo, self.json_generator)
+                return Edition(self.repo, self.items_requests, self.payload_generator)
             case 4:
                 return Pause(self.repo, self.items_requests)
             case 5:
                 return Activation(self.repo, self.items_requests)
             case 6:
-                return Deletation(self.repo)
+                return Deletation(self.repo, self.items_requests)
             case _:
                 raise ValueError(f"Operação inválida: {operation_id}")
 
@@ -50,7 +50,7 @@ class OperationFactory:
 class ProdutosApplication:
     def __init__(self):
         self.repo = ProdutosRepository()
-        self.json_generator = PayloadGenerator()
+        self.payload_generator = PayloadGenerator()
         self.items_requests = ItemsRequests()
         self.meli_auth = MeliAuthCredentials()
         self.token_manager = MeliTokenManager(
@@ -59,7 +59,7 @@ class ProdutosApplication:
         )
         self.operation_factory = OperationFactory(
             repo=self.repo,
-            json_generator=self.json_generator, 
+            payload_generator=self.payload_generator, 
             items_requests=self.items_requests
         )
     
@@ -67,7 +67,7 @@ class ProdutosApplication:
         pending_lines = self.repo.get.pending_operations()
         
         if not pending_lines:
-            print("Nenhuma linha pendente no momento")
+            # print("Nenhuma linha pendente no momento")
             return
         
         user_lines = GroupBy.column(pending_lines, "credentials.client_id")
