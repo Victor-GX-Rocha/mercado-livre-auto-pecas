@@ -119,9 +119,16 @@ class PayloadGenerator:
             if product.identfiers.sku != product_data.get("seller_custom_field"):
                 template_payload.update({"seller_custom_field": product.identfiers.sku})
             
-            shipping = self.shipping_generator.generate(product, token)
-            if shipping.success:
-                template_payload.update({"shipping": shipping.result})
+            # shipping = self.shipping_generator.generate(product, token)
+            # if shipping.success:
+            template_payload.update({
+                "shipping": {
+                        "mode": product.shippiment.modo_envio,
+                        "local_pick_up": product.shippiment.retirada_local,
+                        "free_shipping": product.shippiment.frete_gratis,
+                    }
+                }
+            )
             
             pictures = self.pictures_generator.generate(product, token)
             if pictures.success:

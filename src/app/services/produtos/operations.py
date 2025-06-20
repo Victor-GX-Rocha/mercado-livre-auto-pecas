@@ -291,109 +291,162 @@ class Edition(ProdutosOperation):
         self.repo = repo
         self.items_requests = items_requests
         self.payload_generator = payload_generator
+        self.fails: list[str] = []
+    
+    def _pause(self, line: Product, token: AuthResponse) -> MeliResponse:
+        """
+        """
+        pause_response: MeliResponse = self.items_requests.edit(
+            access_token=token.access_token,
+            item_id=line.identfiers.ml_id_produto,
+            edition_data={"status":"paused"}
+        )
         
+        log.dev.info(f"[BD-ID {line.id}] Pausando o produto")
+        if not pause_response.success:
+            log.dev.exception(str(pause_response))
+            self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=pause_response.error)
+        
+        return pause_response
+    
+    def _add_description(self, line: Product, token: AuthResponse) -> MeliResponse:
+        """
+        """
+        add_description_response = self.items_requests.add_description(
+            access_token=token.access_token, 
+            item_id=line.identfiers.ml_id_produto,
+            descrption=line.sale.descricao
+        )
+        if not add_description_response.success:
+            log.user.warning(f"Falha no processo de adicionar a descrição: {add_description_response.error}")
+            self.fails.append(add_description_response.error)
+        
+        return add_description_response
+    
+    def _change_description(self, line: Product, token: AuthResponse, description_plain_text: str) -> None:
+        """
+        If it has a description, and it's diferent, change it.
+        """
+        
+        if line.sale.descricao == description_plain_text:
+            return
+        
+        change_description_response = self.items_requests.add_description(
+            access_token=token.access_token, 
+            item_id=line.identfiers.ml_id_produto,
+            descrption=line.sale.descricao,
+            change_description=True
+        )
+        if not change_description_response.success:
+            log.user.warning(f"Falha no processo de mudança da descrição: {change_description_response.error}")
+            self.fails.append(change_description_response.error)
+    
+    def _update_description(self, line: Product, token: AuthResponse) -> MeliResponse:
+        """
+        """
+        get_description_response = self.items_requests.get_description(
+            access_token=token.access_token,
+            item_id=line.identfiers.ml_id_produto
+        )
+        
+        if not get_description_response.success:
+            return get_description_response
+        
+        description_plain_text: str = get_description_response.data.get("plain_text")
+        
+        if not description_plain_text:
+            add_description_response = self._add_description(line, token)
+            return add_description_response
+        
+        self._change_description(line, token, description_plain_text)
+    
+    def _edite(self, line, token):
+        """
+        """
+        product_data_response: MeliResponse = self.items_requests.get_item_info(
+            access_token=token.access_token,
+            item_id=line.identfiers.ml_id_produto
+        )
+        
+        if not product_data_response.success:
+            log.user.warning(f"Falha no processo de obter dados do produto: {product_data_response.error}")
+            self.fails.append(product_data_response.error)
+            return
+        
+        edition_payload: PayloadGeneratorResponse = self.payload_generator.build_edition_payload(
+            product=line,
+            product_data=product_data_response.data,
+            token=token
+        )
+        
+        print(f"{edition_payload = }")
+        
+        if not edition_payload.success:
+            log.user.warning(f"Falha no processo de geração dados de edição do produto: {edition_payload.error}")
+            self.fails.append(edition_payload.error)
+        
+        # Aqui é onde edita
+        edition_response: MeliResponse = self.items_requests.edit(
+            access_token=token.access_token,
+            item_id=line.identfiers.ml_id_produto,
+            edition_data=edition_payload.result
+        )
+        
+        print(f"{edition_response = }")
+        
+        if not edition_response.success:
+            log.user.warning(f"Falha no comando de edição do produto: {edition_response}")
+            self.fails.append(edition_response.error)
+    
+    def _reactive(self, line: Product, token: AuthResponse) -> MeliResponse:
+        """
+        """
+        activate_response: MeliResponse = self.items_requests.edit(
+            access_token=token.access_token,
+            item_id=line.identfiers.ml_id_produto,
+            edition_data={"status":"active"}
+        )
+        
+        log.dev.info(f"[BD-ID {line.id}] Reativando o produto")
+        if not activate_response.success:
+            log.user.warning(str(activate_response))
+            self.fails.append(f"Falha no processo de reativação produto {activate_response.error}")
+        
+        return activate_response
+    
+    def _register_results(self, line: Product) -> None:
+        """
+        """
+        if self.fails:
+            self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=self.fails)
+        
+        log.user.info(f"[DB-ID: {line.id} | Cod: {line.identfiers.cod_produto}] Produto {line.sale.titulo} editado com sucesso!")
+        self.repo.update.log_success_code(id=line.id)
+    
+    def edit(self, line: Product, token: AuthResponse) -> None:
+        try:
+            
+            pause_response: MeliResponse = self._pause(line, token) # Pausing
+            if not pause_response.success:
+                return
+            
+            # Editing:
+            self._update_description(line, token)
+            self._edite(line, token)              
+            self._reactive(line, token)
+            self._register_results(line)
+            
+        except Exception as e:
+            message: str = f"Exceção inesperada durante o processo de edição: fails:{self.fails} Exc: {e}"
+            log.dev.exception(message)
+            self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=message)
     
     def execute(self, lines: list[Product], token: AuthResponse) -> None:
         print(f"Executando {self.__class__.__name__}")
         
         for line in lines:
-            fails: list[str] = []
-            
-            try:
-                # Pause:
-                pause_response: MeliResponse = self.items_requests.edit(
-                    access_token=token.access_token,
-                    item_id=line.identfiers.ml_id_produto,
-                    edition_data={"status":"paused"}
-                )
-                
-                log.dev.info(f"[BD-ID {line.id}] Pausando o produto")
-                if not pause_response.success:
-                    log.dev.exception(str(pause_response))
-                    self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=pause_response.error)
-                    return
-                
-                
-                # Editing:
-                
-                # - Change description
-                get_description_response = self.items_requests.get_description(
-                    access_token=token.access_token,
-                    item_id=line.identfiers.ml_id_produto
-                )
-                
-                if get_description_response.success:
-                    if not get_description_response.data.get("plain_text"):
-                        description_response = self.items_requests.add_description(
-                            access_token=token.access_token, 
-                            item_id=line.identfiers.ml_id_produto,
-                            descrption=line.sale.descricao
-                        )
-                        if not description_response.success:
-                            log.user.warning(f"Falha no processo de adicionar a descrição: {description_response.error}")
-                            fails.append(description_response.error)
-                            
-                    if line.sale.descricao != get_description_response.data.get("plain_text"):
-                        description_response = self.items_requests.add_description(
-                            access_token=token.access_token, 
-                            item_id=line.identfiers.ml_id_produto,
-                            descrption=line.sale.descricao,
-                            change_description=True
-                        )
-                        if not description_response.success:
-                            log.user.warning(f"Falha no processo de mudança da descrição: {description_response.error}")
-                            fails.append(description_response.error)
-                
-                
-                # - Change another data
-                
-                # - - Get product data
-                product_data_response: MeliResponse = self.items_requests.get_item_info(
-                    access_token=token.access_token,
-                    item_id=line.identfiers.ml_id_produto
-                )
-                
-                if product_data_response.success:
-                    
-                    edition_payload: PayloadGeneratorResponse = self.payload_generator.build_edition_payload(
-                        product=line,
-                        product_data=product_data_response.data,
-                        token=token
-                    )
-                    
-                    if not edition_payload.success:
-                        log.user.warning(f"Falha no processo de edição dos dados do produto: {edition_payload.error}")
-                        fails.append(edition_payload.error)
-                else:
-                    log.user.warning(f"Falha no processo de obter dados do produto: {product_data_response.error}")
-                    fails.append(product_data_response.error)
-                
-                
-                # Reactivating:
-                activate_response: MeliResponse = self.items_requests.edit(
-                    access_token=token.access_token,
-                    item_id=line.identfiers.ml_id_produto,
-                    edition_data={"status":"active"}
-                )
-                
-                log.dev.info(f"[BD-ID {line.id}] Reativando o produto")
-                if not activate_response.success:
-                    log.user.warning(str(activate_response))
-                    fails.append(f"Falha no processo de reativação produto {activate_response.error}")
-                
-                if fails:
-                    self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=fails)
-                    return
-                
-                log.user.info(f"[DB-ID: {line.id} | Cod: {line.identfiers.cod_produto}] Produto {line.sale.titulo} editado com sucesso!")
-                self.repo.update.log_success_code(id=line.id)
-                
-            except Exception as e:
-                message: str = f"Exceção inesperada durante o processo de edição: fails:{fails} Exc: {e}"
-                log.dev.exception(message)
-                self.repo.update.log_error(id=line.id, cod_erro=89, log_erro=message)
-                
-
+            self.fails: list[str] = []
+            self.edit(line, token)
 
 
 # Turn back to here to apply DRY in this classes

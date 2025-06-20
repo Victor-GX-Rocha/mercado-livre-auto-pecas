@@ -8,6 +8,7 @@ commands.sql
 *.sql
 *.log
 *.ml
+*.exe
 json
 compatibility
 test
