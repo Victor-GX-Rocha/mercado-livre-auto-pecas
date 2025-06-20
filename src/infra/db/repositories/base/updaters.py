@@ -19,3 +19,25 @@ class Loggers:
             produto.status_operacao_id = 3 # Operação realizda mas houve uma falha
             produto.log_erro = str(log_erro)
             produto.cod_erro = cod_erro
+    
+    def log_success_code(self, id: int, status_operacao_id: int = 2) -> None:
+        """
+        Log a simple message with the code sucess.
+        Args:
+            id (int): Line ID.
+            status_operacao_id (int): Success code number. 
+        """
+        with session_scope() as session:
+            line = session.query(self.entity).get(id)
+            line.status_operacao_id = status_operacao_id
+    
+    def got_to_sleep(self, id: int, status_operacao_id: int = 2):
+        """
+        Change the status operation to another number to make it "sleep"
+        Args:
+            id (int): Line ID.
+            status_operacao_id (int): Success code number. 
+        """
+        with session_scope() as session:
+            line = session.query(self.entity).get(id)
+            line.status_operacao_id = status_operacao_id

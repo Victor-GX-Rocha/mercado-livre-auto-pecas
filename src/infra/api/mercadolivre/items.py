@@ -35,7 +35,7 @@ class ItemsRequests:
         
         return response
     
-    def add_description(self, access_token: str, item_id: str, descrption: str) -> MeliResponse:
+    def add_description(self, access_token: str, item_id: str, descrption: str, change_description: bool = False) -> MeliResponse:
         """
         Add a description to a product on mercado libre.
         Args:
@@ -55,7 +55,10 @@ class ItemsRequests:
             "plain_text": descrption
         }
         
-        response: MeliResponse = self.client.post(
+        method: str = "POST" if not change_description else "PUT"
+        
+        response: MeliResponse = self.client.request(
+            method=method,
             endpoint=f"/items/{item_id}/description",
             context="item_description",
             headers=headers,

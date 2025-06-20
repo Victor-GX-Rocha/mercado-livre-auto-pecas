@@ -16,6 +16,9 @@ from .operations import (
     Pause,
     Activation,
     Deletation,
+    
+    JustSleep,
+    InvalidOperation
 )
 
 
@@ -35,6 +38,8 @@ class OperationFactory:
             case 1:
                 # return Publication(self.repo, self.payload_generator)
                 return Publication(self.repo, self.payload_generator, self.items_requests)
+            case 2:
+                return JustSleep(self.repo)
             case 3:
                 return Edition(self.repo, self.items_requests, self.payload_generator)
             case 4:
@@ -44,7 +49,8 @@ class OperationFactory:
             case 6:
                 return Deletation(self.repo, self.items_requests)
             case _:
-                raise ValueError(f"Operação inválida: {operation_id}")
+                return InvalidOperation(self.repo)
+                # raise ValueError(f"Operação inválida: {operation_id}")
 
 
 class ProdutosApplication:
