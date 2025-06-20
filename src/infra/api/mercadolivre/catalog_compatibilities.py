@@ -63,6 +63,8 @@ class CatalogCompatibilitiesRequests:
             json=payload
         )
         
+        # print(f"Geração de comaptiblidade: {response}")
+        
         if response.success:
             if int(response.data["total"]) <= 0:
                 return MeliResponse(

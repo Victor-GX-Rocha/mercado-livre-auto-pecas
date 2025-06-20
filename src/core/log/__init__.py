@@ -1,12 +1,11 @@
-""" Registration systems manager """
+""" Log system. """
 
-from .log import log as logging
-from .dev import dev_log
+from .log import user, dev
 
 __version__ = "v.0.0.1"
 __all__ = [
     "__version__",
     
-    "logging",
-    "dev_log"
+    "user",
+    "dev"
 ]

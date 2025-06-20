@@ -1,6 +1,6 @@
 """ Generate the attributes list """
 
-from src.core.log import logging
+from src.core import log
 from src.infra.db.models.produtos import Product
 from src.infra.api.mercadolivre.auth import AuthResponse
 
@@ -24,7 +24,7 @@ from .generators import (
 
 
 class AttributesGenerator(GeneratorProtocol):
-    """ Genrate the product attributes. """
+    """ Manages the generation of the product attributes. """
     def __init__(self):
         self.generators: list[AttributesGeneratorsProtocol] = [
             OriginGenerator(),
@@ -83,5 +83,5 @@ class AttributesGenerator(GeneratorProtocol):
                     severity="warning"
                 ))
         if warnings:
-            logging.warning(warnings)
+            log.user.warning(warnings)
         return attributes

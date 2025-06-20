@@ -3,7 +3,7 @@
 import sys
 from typing import Dict, List, Optional
 
-from ..core import logging
+from src.core import log
 from .exceptions import (
     # EnvFileNotFoundError,
     ConfigValidationError
@@ -47,7 +47,7 @@ class RealTimeEnvManager:
         # except FileNotFoundError:
         #     raise EnvFileNotFoundError(f"Arquivo {self.env_file} não encontrado")
         except Exception as e:
-            logging.error(f"Erro inesperado: {e}")
+            log.dev.error(f"Erro inesperado: {e}")
             raise ConfigValidationError("Falha na leitura do ambiente") from e
     
     def _parse_env(self, file) -> Dict[str, str]:
@@ -118,6 +118,5 @@ class AppConfigManager(RealTimeEnvManager):
     def verify_off_command(self) -> None:
         """ If STILL_ON == False. Auto turn off the program """
         if not self.load_app_config().still_on:
-            logging.info(f'Arquivo .env: Comando STILL_ON ordem "desligar".\n\nSe deseja ligar o bot, preencha STILL_ON no arquivo .env -> Ex.: STILL_ON=ON\n')
+            log.user.info(f'Arquivo .env: Comando STILL_ON ordem "desligar".\n\nSe deseja ligar o bot, preencha STILL_ON no arquivo .env -> Ex.: STILL_ON=ON\n')
             sys.exit()
-

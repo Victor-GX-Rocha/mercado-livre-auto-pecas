@@ -7,6 +7,7 @@ from .models import MeliResponse
 
 
 class ItemsRequests:
+    """ Requests for /items endpoints. """
     def __init__(self):
         self.client = MLBaseClient()
     

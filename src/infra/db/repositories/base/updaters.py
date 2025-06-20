@@ -16,5 +16,6 @@ class Loggers:
         """
         with session_scope() as session:
             produto = session.query(self.entity).get(id)
+            produto.status_operacao_id = 3 # Operação realizda mas houve uma falha
             produto.log_erro = str(log_erro)
             produto.cod_erro = cod_erro

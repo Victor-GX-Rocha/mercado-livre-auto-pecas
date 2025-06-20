@@ -15,8 +15,8 @@ class GeneratorProtocol(Protocol):
         """
         
         Args:
-            product (Product): Dataclass product table.
-            token (AuthResponse): Mercado libre auth dataclass token. 
+            product (Product): A single product record.
+            token (AuthResponse): Meli authentication credentials.
         """
 
 
@@ -27,13 +27,13 @@ class GeneratorsResponse:
     error: Optional[Any] = None
 
 @dataclass
-class JsonGeneratorResponse:
+class PayloadGeneratorResponse:
     success: bool
     result: Optional[dict[str, Any]]
     error: Optional[Any] = None
 
 @dataclass
-class ShippimentGeneratorResponse:
+class ShippingGeneratorResponse:
     success: bool
     result: Optional[dict[str, Any]]
     error: Optional[Any] = None

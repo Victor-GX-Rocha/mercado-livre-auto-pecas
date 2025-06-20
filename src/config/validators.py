@@ -3,7 +3,7 @@
 import os
 from typing import Protocol, List, Dict
 
-from ..core import logging
+from src.core import log
 
 from .exceptions import (
     MissingConfigVariableError,
@@ -26,7 +26,7 @@ class RequiredKeysValidator:
     def validate(self, env_data: Dict[str, str]) -> None:
         missing = [key for key in self.required_keys if key not in env_data]
         if missing:
-            logging.warning(f"Variáveis ausentes: {missing}")
+            log.user.warning(f"Variáveis ausentes: {missing}")
             raise MissingConfigVariableError(f"Variáveis ausentes: {missing}")
 
 class EmptyValueValidatorAlert:
@@ -41,7 +41,7 @@ class EmptyValueValidatorAlert:
         missing: list = [key for key, value in env_data.items() if key not in self.ignore_keys and value == ""]
         if missing:
             print('Chamado')
-            logging.warning(f'Cuidado! Existem valores de variável ausente nas chaves: {missing}')
+            log.user.warning(f'Cuidado! Existem valores de variável ausente nas chaves: {missing}')
             # raise MissingConfigValueError(f'Valor de variável ausente nas chaves: {missing}')
 
 class RequiredEmptyValueValidator:
@@ -53,7 +53,7 @@ class RequiredEmptyValueValidator:
         
         if missing:
             message: str = f'Valor de variável **obrigatório** ausente nas chaves: {missing} \n\nDesligando o programa para fins de correção...'
-            logging.warning(message)
+            log.user.warning(message)
             raise MissingConfigValueError(message)
 
 class RequiredSystem:
@@ -89,7 +89,7 @@ class TypeConversionValidator:
             self.expected_type(value)
         except ValueError:
             message: str = f"{self.key} deve ser {self.expected_type.__name__}"
-            logging.warning(message)
+            log.user.warning(message)
             raise InvalidConfigVariableError(message)
 
 class FileValidator:
@@ -98,7 +98,7 @@ class FileValidator:
     def __init__(self, file_path: str):
         if not os.path.exists(file_path):
             message: str = f"Arquivo '{file_path}' não encontrado"
-            logging.error(message)
+            log.user.error(message)
             raise FileNotFoundError(message)
         self.file_path = file_path
     

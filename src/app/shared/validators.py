@@ -59,7 +59,8 @@ class EmptyColumnsValidator(ValidatorsProtocol):
         messages: list = []
         messages.append(f"Colunas obrigatórias vazias: {empty_columns}") if empty_columns else None
         messages.append(f"Informação técnica: [Caminhos inválidos: {invalid_paths}]") if invalid_paths else None
-        if not messages:
+        # print(messages)
+        if messages:
             return ValidationResponse(causes=messages)
         return ValidationResponse(is_valid=True)
 
@@ -72,7 +73,8 @@ class EmptyCredentialColumnsValidator(EmptyColumnsValidator):
         messages: list = []
         messages.append(f"Colunas de credencial vazias!: {empty_columns}") if empty_columns else None
         messages.append(f"Informação técnica: [Caminhos inválidos: {invalid_paths}]") if invalid_paths else None
-        if not messages:
+        # print(messages)
+        if messages:
             return ValidationResponse(causes=messages)
         return ValidationResponse(is_valid=True)
 

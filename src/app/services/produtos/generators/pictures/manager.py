@@ -2,13 +2,13 @@
 
 import os
 
-from src.core.log import logging, dev_log
+from src.core import log
 from src.infra.db.models.produtos import Product
 from src.infra.api.mercadolivre.auth import AuthResponse
 from src.infra.api.mercadolivre.images import MeliImageManager
 from src.infra.api.mercadolivre.models import MeliResponse
 from src.infra.api.cloudinary.manager import CloudinaryManager
-from .....shared.image_normalizer import ImageNormalizer
+from src.app.shared.image_normalizer import ImageNormalizer
 from .url_generators import UrlGeneratorFactory 
 from .models import PicturesGeneratorResponse
 from .corrector import CorretImageProperties
@@ -19,7 +19,7 @@ from .url_generators.interface import (
 
 
 class PicturesGenerator:
-    """ Generate meli picutures IDs. """
+    """ Manages the generation of the product meli picutures IDs. """
     def __init__(self):
         self.url_generator: IImageUploader = UrlGeneratorFactory.chose("cloudinary")
         self.image_normalizer = ImageNormalizer
@@ -52,7 +52,7 @@ class PicturesGenerator:
             return self.__create_meli_ids(url_response.result, token)
             
         except Exception as e:
-            dev_log.exception(e)
+            log.dev.exception(e)
             return PicturesGeneratorResponse(
                 success=False,
                 result=None,
@@ -79,7 +79,7 @@ class PicturesGenerator:
             os.remove(temp_image) # Removes the temp image.
         
         if failed_urls:
-            logging.warning(f"Falha ao gerar uma url para a imagem: {failed_urls}")
+            log.user.warning(f"Falha ao gerar uma url para a imagem: {failed_urls}")
         
         if not urls:
             return PicturesGeneratorResponse(
@@ -124,7 +124,7 @@ class PicturesGenerator:
             self.url_generator.delete_image(url.data.id) # Removes the online image from account
             
         if failed_pictures_ids:
-            logging.warning(f"Falha ao gerar um ID para a url: {failed_pictures_ids}")
+            log.user.warning(f"Falha ao gerar um ID para a url: {failed_pictures_ids}")
         
         if not meli_pictures_ids:
             return PicturesGeneratorResponse(
@@ -150,7 +150,7 @@ class PicturesGenerator:
         meli_id_response = self.meli_image_manager.get_meli_picture(image_url=url, access_token=token.access_token)
         
         if not meli_id_response.success:
-            logging.error(f"{meli_id_response.error.message}. Exception: {meli_id_response.error.exception}")
+            log.user.error(f"{meli_id_response.error.message}. Exception: {meli_id_response.error.exception}")
             return PicturesGeneratorResponse(
                 success=False,
                 result=None,

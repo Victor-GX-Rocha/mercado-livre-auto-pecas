@@ -65,6 +65,22 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
             line.produto_status = produto_status
             line.status_operacao_id = status_operacao_id
 
+    def pause_success(
+        self,
+        id: int,
+        produto_status: str,                
+        status_operacao_id: int = OperationStatus.PUBLICATION_SUCCESS
+    ) -> None:
+        """
+        Log a success pause message.
+        Args:
+            produto_status: 
+            status_operacao_id: 
+        """
+        with session_scope() as session:
+            line = session.query(self.entity).get(id)
+            line.produto_status = produto_status
+            line.status_operacao_id = status_operacao_id
 
 class ProdutosInsertMethods(BaseDeleteMethods):
     """ Delete methods for Produtos table entity. """

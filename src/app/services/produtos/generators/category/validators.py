@@ -140,7 +140,7 @@ class CategoryValidator:
         ]
     
     
-    def validate(self, product: Product, category_data: str):
+    def validate(self, product: Product, category_data: dict[str, Any]):
         causes: list = []
         for validator in self.validators:
             response = validator.validate(product, category_data)
@@ -154,41 +154,3 @@ class CategoryValidator:
             )
         
         return ValidationResponse(True)
-
-    # print(validar(product=produto, category_data=cat_data))
-
-
-
-
-
-
-
-# validators: list[CategoryValidateProtocol] = [
-#     IsLeaf(),
-#     BuyingModes(),
-#     ItemConditions(),
-#     MaxDescriptionLength(),
-#     MaxDescriptionLength(),
-#     MaxPicturesPerItem(),
-#     TitleLength(),
-#     MaximumPrice(),
-#     MinimumPrice(),
-#     Price(),
-#     ShippingOptions(),
-#     Status()
-# ]
-
-
-# def validar(product=produto, category_data=cat_data):
-#     causes: list = []
-#     for validator in validators:
-#         response = validator.validate(product, category_data)
-#         if not response.is_valid:
-#             causes.append(response.reason)
-    
-#     if causes:
-#         return ValidationResponse(causes=causes)
-    
-#     return ValidationResponse(True)
-
-# print(validar(product=produto, category_data=cat_data))

@@ -1,13 +1,14 @@
 """ Execution flow of Produtos table operations. """
 
-from src.infra.api.mercadolivre.client import MLBaseClient
-from src.infra.api.mercadolivre.auth import AuthResponse, AuthManager, MeliAuthCredentials
-from src.infra.db.models.produtos import Produtos, Product
+from src.core import log
+from src.infra.api.mercadolivre.auth import AuthResponse, MeliAuthCredentials
+from src.infra.api.mercadolivre.items import ItemsRequests
+from src.infra.db.models.produtos import Product
 from src.infra.db.repositories import ProdutosRepository
 from src.app.shared.oganizer import GroupBy
 from src.app.shared.token_manager import MeliTokenManager
 
-from .generators.json_generator import JsonGenerator
+from .generators.payload import PayloadGenerator
 from .operations import (
     ProdutosOperation,
     Publication,
@@ -17,24 +18,29 @@ from .operations import (
     Deletation,
 )
 
-# meli_client = MLBaseClient()
-# auth_manager = AuthManager(meli_client)
 
 class OperationFactory:
-    def __init__(self, repo, json_generator=None):
+    def __init__(
+        self, 
+        repo: ProdutosRepository, 
+        json_generator: PayloadGenerator = None,
+        items_requests: ItemsRequests = None
+    ) -> ProdutosOperation:
         self.repo = repo
         self.json_generator = json_generator
+        self.items_requests = items_requests
     
     def create(self, operation_id: int) -> ProdutosOperation:
         match operation_id:
             case 1:
-                return Publication(self.repo, self.json_generator)
+                # return Publication(self.repo, self.json_generator)
+                return Publication(self.repo, self.json_generator, self.items_requests)
             case 3:
                 return Edition(self.repo, self.json_generator)
             case 4:
-                return Pause(self.repo)
+                return Pause(self.repo, self.items_requests)
             case 5:
-                return Activation(self.repo)
+                return Activation(self.repo, self.items_requests)
             case 6:
                 return Deletation(self.repo)
             case _:
@@ -44,9 +50,18 @@ class OperationFactory:
 class ProdutosApplication:
     def __init__(self):
         self.repo = ProdutosRepository()
+        self.json_generator = PayloadGenerator()
+        self.items_requests = ItemsRequests()
         self.meli_auth = MeliAuthCredentials()
-        self.token_manager = MeliTokenManager(repo=self.repo, meli_auth=self.meli_auth)
-        self.operation_factory = OperationFactory(repo=self.repo, json_generator=JsonGenerator())
+        self.token_manager = MeliTokenManager(
+            repo=self.repo, 
+            meli_auth=self.meli_auth
+        )
+        self.operation_factory = OperationFactory(
+            repo=self.repo,
+            json_generator=self.json_generator, 
+            items_requests=self.items_requests
+        )
     
     def execute(self) -> None:
         pending_lines = self.repo.get.pending_operations()
@@ -59,7 +74,7 @@ class ProdutosApplication:
         
         for user, lines in user_lines.items():
             if token := self.token_manager.get_token(lines):
-                self._execute_operations(lines, token)
+                self._execute_operations(lines, token.data)
             else:
                 print(f"Falha ao obter token para usuário {user}")
     
@@ -72,8 +87,8 @@ class ProdutosApplication:
                 operation = self.operation_factory.create(oper_id)
                 operation.execute(items, token)
             except ValueError as e:
-                print(f"Erro: {e}")
+                log.user.exception(f"Erro: {e}")
             except AttributeError as e:
-                print(f"Erro de dependência: {e}")
+                log.user.exception(f"Erro de dependência: {e}")
             except Exception as e:
-                print(f"Exceção inesperada: {e}")
+                log.dev.exception(f"Exceção inesperada: {e}")
