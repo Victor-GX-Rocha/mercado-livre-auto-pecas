@@ -36,18 +36,15 @@ class OperationFactory:
     def create(self, operation_id: int) -> ProdutosOperation:
         match operation_id:
             case 1:
-                # return Publication(self.repo, self.payload_generator)
-                return Publication(self.repo, self.payload_generator, self.items_requests)
+                return Publication(log, self.repo, self.payload_generator, self.items_requests)
             case 2:
-                return JustSleep(self.repo)
+                return Edition(log, self.repo, self.items_requests, self.payload_generator)
             case 3:
-                return Edition(self.repo, self.items_requests, self.payload_generator)
+                return Pause(log, self.repo, self.items_requests)
             case 4:
-                return Pause(self.repo, self.items_requests)
+                return Activation(log, self.repo, self.items_requests)
             case 5:
-                return Activation(self.repo, self.items_requests)
-            case 6:
-                return Deletation(self.repo, self.items_requests)
+                return Deletation(log, self.repo, self.items_requests)
             case _:
                 return InvalidOperation(self.repo)
                 # raise ValueError(f"Operação inválida: {operation_id}")

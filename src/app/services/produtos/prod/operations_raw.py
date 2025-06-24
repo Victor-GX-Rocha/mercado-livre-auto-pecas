@@ -17,7 +17,7 @@ from src.app.shared.validators import (
     EmptyColumnsValidator, 
     EmptyCredentialColumnsValidator
 )
-from .generators import PayloadGenerator, PayloadGeneratorResponse
+from ..generators import PayloadGenerator, PayloadGeneratorResponse
 
 
 @runtime_checkable
@@ -530,6 +530,7 @@ class Pause(ProdutosOperation):
             self.repo.update.log_error(line.id, cod_erro=90, log_erro=causes)
             return False
         return True
+
 
 class Activation(ProdutosOperation):
     def __init__(

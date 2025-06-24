@@ -2,10 +2,10 @@
 
 import operator
 from typing import Protocol, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from abc import abstractmethod
 
-from ...infra.db.repositories.models import DataclassTable
+from src.infra.db.repositories.models import DataclassTable
 
 @dataclass
 class ValidationResponse:
@@ -30,8 +30,9 @@ class ValidatorsProtocol(Protocol):
     @abstractmethod
     def validate(self, dataclass_table: DataclassTable) -> ValidationResponse:
         """
+        Validate protocol method.
         Args:
-            dataclass_table (DataclassTable): Dataclasse with table content.
+            dataclass_table (DataclassTable): Dataclasse table content.
         """
         pass
 
@@ -73,8 +74,26 @@ class EmptyCredentialColumnsValidator(EmptyColumnsValidator):
         messages: list = []
         messages.append(f"Colunas de credencial vazias!: {empty_columns}") if empty_columns else None
         messages.append(f"Informação técnica: [Caminhos inválidos: {invalid_paths}]") if invalid_paths else None
-        # print(messages)
         if messages:
             return ValidationResponse(causes=messages)
         return ValidationResponse(is_valid=True)
 
+
+class Validator:
+    @staticmethod
+    def validate(line: DataclassTable, validators: list[ValidatorsProtocol]) -> ValidationResponse:
+        """
+        Vaidate if the table line is able to be used.
+        Args:
+            line (DataclassTable): Dataclass table line.
+        Returns:
+            ValidationResponse: 
+        """
+        causes: list = []
+        for validator in validators:
+            response = validator.validate(line)
+            if not response.is_valid:
+                causes.append(response.causes)
+        if causes:
+            return ValidationResponse(causes=causes)
+        return ValidationResponse(True)

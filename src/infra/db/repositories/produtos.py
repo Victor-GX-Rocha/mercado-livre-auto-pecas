@@ -6,6 +6,7 @@
 # from session.session_manager import session_scope
 from src.infra.db.repositories.session.session_manager import session_scope
 from ..models.produtos import Produtos, Product, ProdutosConverter
+from .models import OperationStatus
 from .base import (
     BaseGetMethods,
     BaseUpdateMethods,
@@ -14,9 +15,6 @@ from .base import (
 )
 
 converter = ProdutosConverter()
-
-class OperationStatus:
-    PUBLICATION_SUCCESS: int = 2
 
 
 class ProdutosGetMethods(BaseGetMethods):
@@ -46,7 +44,7 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
         categoria: str,
         link_publicacao: str,
         produto_status: str,                
-        status_operacao_id: int = OperationStatus.PUBLICATION_SUCCESS
+        status_operacao_id: int = OperationStatus.FINILIZED
     ) -> None:
         """
         Log a success publication message.
@@ -64,29 +62,13 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
             line.link_publicacao = link_publicacao
             line.produto_status = produto_status
             line.status_operacao_id = status_operacao_id
+            line.cod_erro = 0
     
-    def pause_success(
+    def change_status_success(
         self,
         id: int,
         produto_status: str,                
-        status_operacao_id: int = OperationStatus.PUBLICATION_SUCCESS
-    ) -> None:
-        """
-        Log a success pause message.
-        Args:
-            produto_status: 
-            status_operacao_id: 
-        """
-        with session_scope() as session:
-            line = session.query(self.entity).get(id)
-            line.produto_status = produto_status
-            line.status_operacao_id = status_operacao_id
-    
-    def activation_success(
-        self,
-        id: int,
-        produto_status: str,                
-        status_operacao_id: int = OperationStatus.PUBLICATION_SUCCESS
+        status_operacao_id: int = OperationStatus.FINILIZED
     ) -> None:
         """
         Log a success activation message.
@@ -98,12 +80,49 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
             line = session.query(self.entity).get(id)
             line.produto_status = produto_status
             line.status_operacao_id = status_operacao_id
+            line.cod_erro = 0
+    
+    def pause_success(
+        self,
+        id: int,
+        produto_status: str,                
+        status_operacao_id: int = OperationStatus.FINILIZED
+    ) -> None:
+        """
+        Log a success pause message.
+        Args:
+            produto_status: 
+            status_operacao_id: 
+        """
+        self.change_status_success(
+            id=id, 
+            produto_status=produto_status, 
+            status_operacao_id=status_operacao_id
+        )
+    
+    def activation_success(
+        self,
+        id: int,
+        produto_status: str,                
+        status_operacao_id: int = OperationStatus.FINILIZED
+    ) -> None:
+        """
+        Log a success activation message.
+        Args:
+            produto_status: 
+            status_operacao_id: 
+        """
+        self.change_status_success(
+            id=id, 
+            produto_status=produto_status, 
+            status_operacao_id=status_operacao_id
+        )
     
     def deletation_success(
         self,
         id: int,
         produto_status: str,                
-        status_operacao_id: int = OperationStatus.PUBLICATION_SUCCESS
+        status_operacao_id: int = OperationStatus.FINILIZED
     ) -> None:
         """
         Log a success delete message.
@@ -111,10 +130,11 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
             produto_status: 
             status_operacao_id: 
         """
-        with session_scope() as session:
-            line = session.query(self.entity).get(id)
-            line.produto_status = produto_status
-            line.status_operacao_id = status_operacao_id
+        self.change_status_success(
+            id=id, 
+            produto_status=produto_status, 
+            status_operacao_id=status_operacao_id
+        )
 
 class ProdutosInsertMethods(BaseDeleteMethods):
     """ Delete methods for Produtos table entity. """

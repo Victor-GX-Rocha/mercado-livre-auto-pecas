@@ -28,15 +28,17 @@ class ShippingGenerator(GeneratorProtocol):
             height: str = product.dimensions.altura
             weight: str = product.dimensions.peso
             
-            dimensions: str = str(f'{length}x{width}x{height},{weight}')
+            dimensions: str = f"{length}x{width}x{height},{weight}"
             
             shipping_info: dict[str, Any] = {
                 "mode": product.shippiment.modo_envio,
                 "dimensions": dimensions,
                 "local_pick_up": product.shippiment.retirada_local,
                 "free_shipping": product.shippiment.frete_gratis,
-                "logistic_type": product.shippiment.modo_envio_logistica #"logistic_type"  # 'drop_off'
+                "logistic_type": product.shippiment.modo_envio_logistica #"logistic_type"
             }
+            
+            print(f"{shipping_info = }")
             
             return ShippingGeneratorResponse(
                 success=True,
@@ -45,7 +47,6 @@ class ShippingGenerator(GeneratorProtocol):
             
         except Exception as e:
             message: str = f"Falha inesperada ao criar informações de envio: {e}"
-            # log.dev.exception(message)
             return ShippingGeneratorResponse(
                 success=False,
                 result=None,
