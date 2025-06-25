@@ -11,14 +11,9 @@ from src.infra.api.mercadolivre.catalog_compatibilities import CatalogCompatibil
 from src.infra.db.models.produtos import Product
 from src.infra.db.repositories import ProdutosRepository
 from src.infra.db.repositories.models import ResponseCode
-from src.app.shared.validators import (
-    ValidatorsProtocol,
-    EmptyColumnsValidator, 
-    EmptyCredentialColumnsValidator
-)
-from .models import ProdutosOperationProtocol
+from src.app.shared.validators import ValidatorsProtocol, EmptyColumnsValidator, EmptyCredentialColumnsValidator
 from ..generators import PayloadGenerator, PayloadGeneratorResponse
-
+from .models import ProdutosOperationProtocol
 from .tools import ProdutosValidator
 
 

@@ -1,4 +1,4 @@
-""" . """
+""" Models for produtos table operations. """
 
 from dataclasses import dataclass
 from typing import Protocol, Optional, runtime_checkable
@@ -16,4 +16,3 @@ class ValidationResponse:
 class ProdutosOperationProtocol(Protocol):
     def execute(self, lines: list[Product], token: AuthResponse) -> None:
         ...
-

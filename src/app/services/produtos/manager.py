@@ -7,18 +7,11 @@ from src.infra.db.models.produtos import Product
 from src.infra.db.repositories import ProdutosRepository
 from src.app.shared.oganizer import GroupBy
 from src.app.shared.token_manager import MeliTokenManager
-
 from .generators.payload import PayloadGenerator
 from .operations import (
-    ProdutosOperation,
-    Publication,
-    Edition,
-    Pause,
-    Activation,
-    Deletation,
-    
-    JustSleep,
-    InvalidOperation
+    ProdutosOperationProtocol, 
+    Publication, Edition, Pause, Activation, Deletion,
+    JustSleep, InvalidOperation
 )
 
 
@@ -28,12 +21,12 @@ class OperationFactory:
         repo: ProdutosRepository, 
         payload_generator: PayloadGenerator = None,
         items_requests: ItemsRequests = None
-    ) -> ProdutosOperation:
+    ) -> ProdutosOperationProtocol:
         self.repo = repo
         self.payload_generator = payload_generator
         self.items_requests = items_requests
     
-    def create(self, operation_id: int) -> ProdutosOperation:
+    def create(self, operation_id: int) -> ProdutosOperationProtocol:
         match operation_id:
             case 1:
                 return Publication(log, self.repo, self.payload_generator, self.items_requests)
@@ -44,7 +37,7 @@ class OperationFactory:
             case 4:
                 return Activation(log, self.repo, self.items_requests)
             case 5:
-                return Deletation(log, self.repo, self.items_requests)
+                return Deletion(log, self.repo, self.items_requests)
             case _:
                 return InvalidOperation(self.repo)
                 # raise ValueError(f"Operação inválida: {operation_id}")
