@@ -20,8 +20,8 @@ from src.infra.api.mercadolivre.auth import AuthResponse
 from src.infra.api.mercadolivre.items import ItemsRequests
 from src.infra.api.mercadolivre.models import MeliResponse
 from src.infra.db.models.produtos import Product
-from src.infra.db.repositories import ProdutosRepository
-from src.infra.db.repositories.models import ResponseCode
+from src.infra.db.repo import ProdutosRepository
+from src.infra.db.repo.models import ResponseCode
 from src.app.shared.validators import (
     ValidatorsProtocol,
     EmptyColumnsValidator, 
@@ -106,7 +106,7 @@ class Edition(ProdutosOperationProtocol):
             log.dev.exception(msg)
             self.repo.update.log_error(
                 id=line.id,
-                cod_erro=ResponseCode.PROGRAM_ERROR, 
+                return_code=ResponseCode.PROGRAM_ERROR, 
                 log_erro=msg
             )
             self._reactive(line, token, product_data=product_data_response)
@@ -116,7 +116,7 @@ class Edition(ProdutosOperationProtocol):
             log.dev.exception(msg)
             self.repo.update.log_error(
                 id=line.id,
-                cod_erro=ResponseCode.PROGRAM_ERROR, 
+                return_code=ResponseCode.PROGRAM_ERROR, 
                 log_erro=msg
             )
             self._reactive(line, token, product_data=product_data_response)
@@ -128,7 +128,7 @@ class Edition(ProdutosOperationProtocol):
             log.dev.exception(msg)
             self.repo.update.log_error(
                 id=line.id,
-                cod_erro=ResponseCode.PROGRAM_ERROR, 
+                return_code=ResponseCode.PROGRAM_ERROR, 
                 log_erro=msg
             )
             

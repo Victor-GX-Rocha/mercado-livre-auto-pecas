@@ -1,8 +1,8 @@
 """ Category requests. """
 
-from ..client import MLBaseClient
-from ..models import MeliResponse
-# from ..auth import AuthResponse
+from src.infra.api.mercadolivre.client import MLBaseClient
+from src.infra.api.mercadolivre.models import MeliResponse
+
 
 class CategoryRequests:
     def __init__(self):

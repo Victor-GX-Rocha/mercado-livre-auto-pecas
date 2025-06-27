@@ -4,7 +4,7 @@ from src.core import log
 from src.infra.api.mercadolivre.auth import AuthResponse, MeliAuthCredentials
 from src.infra.api.mercadolivre.items import ItemsRequests
 from src.infra.db.models.produtos import Product
-from src.infra.db.repositories import ProdutosRepository
+from src.infra.db.repo import ProdutosRepository
 from src.app.shared.oganizer import GroupBy
 from src.app.shared.token_manager import MeliTokenManager
 from .generators.payload import PayloadGenerator

@@ -63,20 +63,18 @@ class CatalogCompatibilitiesRequests:
             json=payload
         )
         
-        # print(f"Geração de comaptiblidade: {response}")
         
-        if response.success:
-            if int(response.data["total"]) <= 0:
-                return MeliResponse(
-                    success=False,
-                    data=None,
-                    error=MeliErrorDetail(
-                        message="O mercado livre não encontrou compatibilidades para o seu produto. Dica: Se viável, tente aumentar os filtros, insira mais marcas, modelos ou anos compatíveis.",
-                        context="get_compatibilities",
-                        code=88,
-                        http_status=response.http_status,
-                        details="Ao inserir poucas informações de IDs sobre seu produto, é provável que não sejam encontrados muitos veículos de catálogo compatíveis, ou mesmo nenhum. Revise sua publicação. Processo pulado. "
-                    )
+        if response.success and int(response.data["total"]) <= 0:
+            return MeliResponse(
+                success=False,
+                data=None,
+                error=MeliErrorDetail(
+                    message="O mercado livre não encontrou compatibilidades para o seu produto. Dica: Se viável, tente aumentar os filtros, insira mais marcas, modelos ou anos compatíveis.",
+                    context="get_compatibilities",
+                    code=88,
+                    http_status=response.http_status,
+                    details="Ao inserir poucas informações de IDs sobre seu produto, é provável que não sejam encontrados muitos veículos de catálogo compatíveis, ou mesmo nenhum. Revise sua publicação. Processo pulado. "
                 )
+            )
         
         return response

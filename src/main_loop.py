@@ -4,13 +4,12 @@ import time
 
 from .core import log
 from .config import AppConfigManager
-
-config = AppConfigManager()
-database_config = config.load_database_config()
-
 from .app.services import ProdutosApplication
 
 app_produtos = ProdutosApplication()
+config = AppConfigManager()
+database_config = config.load_database_config()
+
 
 class MainLoop:
     """ Manages and controls the main program loop. """

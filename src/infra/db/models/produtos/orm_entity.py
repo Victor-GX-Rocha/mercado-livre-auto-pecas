@@ -3,13 +3,11 @@
 from sqlalchemy import event, Integer, String, Text, Boolean, Sequence, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, composite #DeclarativeBase, 
 from sqlalchemy.schema import CreateSequence
-from dataclasses import dataclass
 
 from ..base import Base
 from .data_class import (
     MeliCredentials,
     Controlers,
-    ErrorLoggers,
     Identifiers,
     SaleData,
     ShippimentData,
@@ -19,7 +17,6 @@ from .data_class import (
 )
 
 
-# @dataclass
 class Produtos(Base):
     __tablename__: str = "produtos"
     
@@ -43,17 +40,15 @@ class Produtos(Base):
         deferred=False
     )
     
-    status_operacao_id: Mapped[int] = mapped_column(Integer)
     operacao: Mapped[int] = mapped_column(Integer)
+    cod_retorno: Mapped[int] = mapped_column(Integer)
+    log_erro: Mapped[str] = mapped_column(Text)
     controlers = composite(Controlers, 
-        status_operacao_id, 
-        operacao,
+        "operacao",
+        "cod_retorno",
+        "log_erro",
         deferred=False
     )
-    
-    cod_erro: Mapped[int] = mapped_column(Integer)
-    log_erro: Mapped[str] = mapped_column(Text)
-    error_logers = composite(ErrorLoggers, "cod_erro", "log_erro")
     
     cod_produto: Mapped[str] = mapped_column(String(16))
     sku: Mapped[str] = mapped_column(String(64))

@@ -4,8 +4,8 @@
 
 # from session import session_scope
 # from session.session_manager import session_scope
-from src.infra.db.repositories.session import session_scope
-from ..models.cloud import CloudinaryORM, CloudinaryDataclass, CloudinaryConverter
+from src.infra.db.repo.session import session_scope
+from src.infra.db.models.cloud import CloudinaryORM, CloudinaryDataclass, CloudinaryConverter
 from .base import (
     BaseGetMethods,
     BaseUpdateMethods,

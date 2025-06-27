@@ -3,23 +3,18 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from ..base import MeliCredentials
+from src.infra.db.models.base import MeliCredentials
 
 @dataclass
 class Controlers:
-    """ Operation control columns """
-    status_operacao_id: int
+    """ Operation control columns. """
     operacao: int
-
-@dataclass
-class ErrorLoggers:
-    """ Error log columns """
-    cod_erro: int
-    log_erro: Optional[str]
+    cod_retorno: int
+    log_erro: str
 
 @dataclass
 class Identifiers:
-    """ Product unique indentiers (Inertal system and Meli) """
+    """ Product unique indentiers (Inertal system and Meli)."""
     cod_produto: Optional[str]
     sku: Optional[str]
     ml_id_produto: Optional[str]
@@ -27,12 +22,12 @@ class Identifiers:
 
 @dataclass
 class SaleData:
-    """ Product sale data """
+    """ Product sale data. """
     titulo: Optional[str]
     descricao: Optional[str]
     imagens: Optional[list]
     estoque: Optional[int]
-    preco: Optional[float] #numeric(102)
+    preco: Optional[float]
     moeda: Optional[str]
     tipo_anuncio: Optional[str]
     modo_compra: Optional[str]
@@ -40,7 +35,7 @@ class SaleData:
 
 @dataclass
 class ShippimentData:
-    """ Product shippiment data """
+    """ Product shippiment data. """
     modo_envio: Optional[str]
     logistica: Optional[str]
     modo_envio_logistica: Optional[str]
@@ -49,7 +44,7 @@ class ShippimentData:
 
 @dataclass
 class CategoryData:
-    """ Product category information """
+    """ Product category information. """
     categoria: Optional[str]
     categoria_id: Optional[str]
     categoria_exemplo: Optional[str]
@@ -57,7 +52,7 @@ class CategoryData:
 
 @dataclass
 class TechnicalData:
-    """ Product technical data """
+    """ Product technical data. """
     marca: Optional[str]
     condicao_produto: Optional[str]
     gtin: Optional[str]
@@ -76,7 +71,7 @@ class TechnicalData:
 
 @dataclass
 class DimensionsData:
-    """ Product dimension data """
+    """ Product dimension data. """
     altura: Optional[str]
     largura: Optional[int]
     comprimento: Optional[int]
@@ -84,11 +79,10 @@ class DimensionsData:
 
 @dataclass
 class Product:
-    """ Dataclass for `Produtos` table """
+    """ Dataclass for `Produtos` table. """
     id: int
     credentials: MeliCredentials
     controlers: Controlers
-    error_logers: ErrorLoggers
     identfiers: Identifiers
     sale: SaleData
     shippiment: ShippimentData

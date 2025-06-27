@@ -4,7 +4,6 @@ commands.sql
 **/__pycache__/
 *.json
 *.ipynb
-*.txt
 *.sql
 *.log
 *.ml

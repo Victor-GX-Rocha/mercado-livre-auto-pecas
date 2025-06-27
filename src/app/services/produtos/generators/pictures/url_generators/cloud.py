@@ -1,7 +1,7 @@
 """ Cloudinary interface adapter. """
 
 from src.config import AppConfigManager
-from src.infra.db.repositories import CloudinaryRepository
+from src.infra.db.repo import CloudinaryRepository
 from src.infra.api.cloudinary import CloudinaryManager
 from .interface import (
     IImageUploader, 

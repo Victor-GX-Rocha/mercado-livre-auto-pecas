@@ -9,10 +9,10 @@ from src.infra.api.mercadolivre.items import ItemsRequests
 from src.infra.api.mercadolivre.models import MeliResponse
 from src.infra.api.mercadolivre.catalog_compatibilities import CatalogCompatibilitiesRequests
 from src.infra.db.models.produtos import Product
-from src.infra.db.repositories import ProdutosRepository
-from src.infra.db.repositories.models import ResponseCode
+from src.infra.db.repo import ProdutosRepository
+from src.infra.db.repo.models import ResponseCode
 from src.app.shared.validators import ValidatorsProtocol, EmptyColumnsValidator, EmptyCredentialColumnsValidator
-from ..generators import PayloadGenerator, PayloadGeneratorResponse
+from src.app.services.produtos.generators import PayloadGenerator, PayloadGeneratorResponse
 from .models import ProdutosOperationProtocol
 from .tools import ProdutosValidator
 
@@ -27,7 +27,7 @@ class PublicationErrorHandler:
             return
         self.repo.update.log_error(
             line.id, 
-            cod_erro=ResponseCode.PROGRAM_ERROR, 
+            return_code=ResponseCode.PROGRAM_ERROR, 
             log_erro=publication_response.error
         ) # Generic error
     
@@ -37,7 +37,7 @@ class PublicationErrorHandler:
         if publication_response.error.details.find(fullfilment_not_allowed_error) != -1:
             self.repo.update.log_error(
                 line.id, 
-                cod_erro=ResponseCode.PROGRAM_ERROR, 
+                return_code=ResponseCode.PROGRAM_ERROR, 
                 log_erro='Seu perfil ainda não é autorizado a publicar no modo "fulfillment". Este modo só é liberado após o registro que pode ser realizado através desse link: https://envios.mercadolivre.com.br/vender-com-full/contato?openSea=true. Caso queira mais informação sobre o que é modo fulfillment: [O que é o full: https://www.mercadolivre.com.br/ajuda/O-que-e-o-Mercado-Envios-Full_5162, Como vender com o full: https://envios.mercadolivre.com.br/vender-com-full].'
             )
             return True
@@ -79,7 +79,7 @@ class Publication(ProdutosOperationProtocol):
         for line in lines:
             self.repo.update.executing(id=line.id)
             
-            if not self.validate(line, self.validators):
+            if not self.validator.validate(line, self.validators):
                 continue
             
             payload_response: PayloadGeneratorResponse = self.__create_payload(line, token)
@@ -114,7 +114,11 @@ class Publication(ProdutosOperationProtocol):
         """
         payload_response = self.payload_generator.build_publication_payload(product=line, token=token)
         if not payload_response.success:
-            self.repo.update.log_error(line.id, cod_erro=ResponseCode.PROGRAM_ERROR, log_erro=payload_response.error)
+            self.repo.update.log_error(
+                line.id, 
+                return_code=ResponseCode.PROGRAM_ERROR, 
+                log_erro=payload_response.error
+            )
         return payload_response
     
     def __publish(self, line: Product, access_token: str, payload_data: dict[str, Any]) -> MeliResponse:
@@ -169,7 +173,11 @@ class Publication(ProdutosOperationProtocol):
         
         if not descripition_response.success:
             self.log.dev.error(str(descripition_response))
-            self.repo.update.log_error(line.id, cod_erro=ResponseCode.PROGRAM_ERROR, log_erro=descripition_response.error)
+            self.repo.update.log_error(
+                line.id, 
+                return_code=ResponseCode.PROGRAM_ERROR, 
+                log_erro=descripition_response.error
+            )
         
         self.log.user.info("Descrição adicionada com sucesso.")
         return descripition_response
@@ -202,7 +210,11 @@ class Publication(ProdutosOperationProtocol):
         )
         
         if not compatibilities_response.success:
-            self.repo.update.log_error(line.id, cod_erro=ResponseCode.PROGRAM_ERROR, log_erro=compatibilities_response.error)
+            self.repo.update.log_error(
+                line.id, 
+                return_code=ResponseCode.PROGRAM_ERROR, 
+                log_erro=compatibilities_response.error
+            )
             return compatibilities_response
         
         compatibilities_ids: list[str] = [result["id"] for result in compatibilities_response.data["results"]]
@@ -215,7 +227,11 @@ class Publication(ProdutosOperationProtocol):
         
         if not compatibility_addition_response.success:
             self.log.dev.error(str(compatibility_addition_response))
-            self.repo.update.log_error(line.id, cod_erro=ResponseCode.PROGRAM_ERROR, log_erro=compatibility_addition_response.error)
+            self.repo.update.log_error(
+                line.id, 
+                return_code=ResponseCode.PROGRAM_ERROR, 
+                log_erro=compatibility_addition_response.error
+            )
         
         return compatibility_addition_response
     

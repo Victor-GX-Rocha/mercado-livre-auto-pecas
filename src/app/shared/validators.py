@@ -5,7 +5,7 @@ from typing import Protocol, Optional
 from dataclasses import dataclass
 from abc import abstractmethod
 
-from src.infra.db.repositories.models import DataclassTable
+from src.infra.db.repo.models import DataclassTable
 
 @dataclass
 class ValidationResponse:

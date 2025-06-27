@@ -4,17 +4,15 @@
 
 # from session import session_scope
 # from session.session_manager import session_scope
-from src.infra.db.repositories.session.session_manager import session_scope
-from ..models.produtos import Produtos, Product, ProdutosConverter
-from .models import OperationStatus
+from src.infra.db.repo.session.session_manager import session_scope
+from ..models.produtos import Produtos, ProdutosConverter
+from .models import ResponseCode
 from .base import (
     BaseGetMethods,
     BaseUpdateMethods,
     BaseDeleteMethods,
     BaseInsertMethods
 )
-
-converter = ProdutosConverter()
 
 
 class ProdutosGetMethods(BaseGetMethods):
@@ -25,7 +23,7 @@ class ProdutosGetMethods(BaseGetMethods):
             entity (Produtos): Produtos table entity.
         """
         self.entity = entity
-        self.converter = converter
+        self.converter = ProdutosConverter()
 
 
 class ProdutosUpdateMethods(BaseUpdateMethods):
@@ -43,8 +41,7 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
         ml_id_produto: str,
         categoria: str,
         link_publicacao: str,
-        produto_status: str,                
-        status_operacao_id: int = OperationStatus.FINILIZED
+        produto_status: str,
     ) -> None:
         """
         Log a success publication message.
@@ -53,7 +50,6 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
             categoria: 
             link_publicacao: 
             produto_status: 
-            status_operacao_id: 
         """
         with session_scope() as session:
             line = session.query(self.entity).get(id)
@@ -61,79 +57,66 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
             line.categoria = categoria
             line.link_publicacao = link_publicacao
             line.produto_status = produto_status
-            line.status_operacao_id = status_operacao_id
-            line.cod_erro = 0
+            line.cod_retorno = ResponseCode.SUCCESS
     
     def change_status_success(
         self,
         id: int,
-        produto_status: str,                
-        status_operacao_id: int = OperationStatus.FINILIZED
+        produto_status: str,
     ) -> None:
         """
         Log a success activation message.
         Args:
-            produto_status: 
-            status_operacao_id: 
+            produto_status:
         """
         with session_scope() as session:
             line = session.query(self.entity).get(id)
             line.produto_status = produto_status
-            line.status_operacao_id = status_operacao_id
-            line.cod_erro = 0
+            line.cod_retorno = ResponseCode.SUCCESS
     
     def pause_success(
         self,
         id: int,
-        produto_status: str,                
-        status_operacao_id: int = OperationStatus.FINILIZED
+        produto_status: str,
     ) -> None:
         """
         Log a success pause message.
         Args:
             produto_status: 
-            status_operacao_id: 
         """
         self.change_status_success(
-            id=id, 
-            produto_status=produto_status, 
-            status_operacao_id=status_operacao_id
+            id=id,
+            produto_status=produto_status,
         )
     
     def activation_success(
         self,
         id: int,
-        produto_status: str,                
-        status_operacao_id: int = OperationStatus.FINILIZED
+        produto_status: str,
     ) -> None:
         """
         Log a success activation message.
         Args:
-            produto_status: 
-            status_operacao_id: 
+            produto_status:
         """
         self.change_status_success(
             id=id, 
-            produto_status=produto_status, 
-            status_operacao_id=status_operacao_id
+            produto_status=produto_status,
         )
     
     def deletation_success(
         self,
         id: int,
-        produto_status: str,                
-        status_operacao_id: int = OperationStatus.FINILIZED
+        produto_status: str,
     ) -> None:
         """
         Log a success delete message.
         Args:
-            produto_status: 
-            status_operacao_id: 
+            produto_status:
         """
         self.change_status_success(
             id=id, 
-            produto_status=produto_status, 
-            status_operacao_id=status_operacao_id
+            produto_status=produto_status,
         )
 
 class ProdutosInsertMethods(BaseDeleteMethods):

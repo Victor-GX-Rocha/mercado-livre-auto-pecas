@@ -6,8 +6,8 @@ from src.infra.api.mercadolivre.auth import AuthResponse
 from src.infra.api.mercadolivre.items import ItemsRequests
 from src.infra.api.mercadolivre.models import MeliResponse
 from src.infra.db.models.produtos import Product
-from src.infra.db.repositories import ProdutosRepository
-from src.infra.db.repositories.models import ResponseCode
+from src.infra.db.repo import ProdutosRepository
+from src.infra.db.repo.models import ResponseCode
 from src.app.shared.validators import ValidatorsProtocol, EmptyColumnsValidator, EmptyCredentialColumnsValidator
 
 
@@ -125,7 +125,7 @@ class Deletion(ProdutosOperationProtocol):
         self.log.dev.exception(error_msg)
         self.repo.update.log_error(
             line.id, 
-            cod_erro=ResponseCode.PROGRAM_ERROR, 
+            return_code=ResponseCode.PROGRAM_ERROR, 
             log_erro=error_msg
         )
     

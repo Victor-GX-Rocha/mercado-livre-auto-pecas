@@ -2,8 +2,8 @@
 
 from src.infra.api.mercadolivre.auth import AuthResponse
 from src.infra.db.models.produtos import Product
-from src.infra.db.repositories import ProdutosRepository
-from src.infra.db.repositories.models import ResponseCode
+from src.infra.db.repo import ProdutosRepository
+from src.infra.db.repo.models import ResponseCode
 
 class JustSleep:
     def __init__(self, repo: ProdutosRepository):
@@ -25,6 +25,6 @@ class InvalidOperation:
         for line in lines:
             self.repo.update.log_error(
                 id=line.id, 
-                cod_erro=ResponseCode.TABLE_ERROR, 
+                return_code=ResponseCode.TABLE_ERROR, 
                 log_erro=f"Operação inválida: {line.controlers.operacao}"
             )

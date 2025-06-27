@@ -8,7 +8,14 @@ class AuthManager:
     def __init__(self):
         self.client = MLBaseClient()
     
-    def get_refresh_token(self, client_id: str, client_secret: str, redirect_uri: str, refresh_token: str) -> MeliResponse:
+    def get_refresh_token(
+        self, 
+        client_id: str, 
+        client_secret: str, 
+        redirect_uri: str, 
+        refresh_token: str
+    ) -> MeliResponse:
+        
         payload = {
             'grant_type': 'refresh_token',
             'client_id': client_id,
@@ -20,14 +27,14 @@ class AuthManager:
         response = self.client.post(
             endpoint='/oauth/token',
             data=payload,
-            context="auth"  # Novo parâmetro para contexto
+            context="auth"
         )
         
         if not response.success:
             return response
         
         try:
-            # Mapeamento explícito e seguro
+            
             auth_data = AuthResponse(
                 access_token=response.data['access_token'],
                 token_type=response.data['token_type'],
@@ -36,6 +43,7 @@ class AuthManager:
                 user_id=response.data['user_id'],
                 refresh_token=response.data['refresh_token']
             )
+            
             return MeliResponse(
                 success=True,
                 data=auth_data,

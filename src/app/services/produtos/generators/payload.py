@@ -107,16 +107,16 @@ class PayloadGenerator:
             if product.sale.preco != product_data.get("price"):
                 template_payload.update({"price": float(product.sale.preco)})
             
-            if product.sale.estoque != product_data.get("available_quantity"):
+            if product.sale.estoque != product_data.get("available_quantity") and product.sale.estoque > 0:
                 template_payload.update({"available_quantity": product.sale.estoque})
             
             if product.sale.modo_compra != product_data.get("buying_mode"):
                 template_payload.update({"buying_mode": product.sale.modo_compra})
             
-            if product.technical.condicao_produto != product_data.get("condition"):
+            if product.technical.condicao_produto != product_data.get("condition"): # Test if it's possible to change the product condition
                 template_payload.update({"condition": product.technical.condicao_produto})
             
-            if product.identfiers.sku != product_data.get("seller_custom_field"):
+            if product.identfiers.sku != product_data.get("seller_custom_field"): # And SKU
                 template_payload.update({"seller_custom_field": product.identfiers.sku})
             
             # shipping = self.shipping_generator.generate(product, token)

@@ -1,10 +1,10 @@
-""" Session manager for ORM queryes """
+""" Session manager for ORM queryes. """
 
 from typing import Iterator
 from sqlalchemy.orm import Session
 from contextlib import contextmanager
 
-from ....db import InternalSession
+from src.infra.db import InternalSession
 
 @contextmanager
 def session_scope() -> Iterator[Session]:

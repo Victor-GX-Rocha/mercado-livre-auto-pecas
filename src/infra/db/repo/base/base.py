@@ -8,18 +8,13 @@ Provides:
 - BaseDeleteMethods: Common delete methods for repositories 
 """
 
-# database/repositories/base.py
-
-
 from typing import Type, TypeVar
 
-from ..session import session_scope
+from src.infra.db.repo.models import TableEntity
 from .geters import StatusOperationGetters
 from .updaters import Loggers
-from ..models import TableEntity
 
 
-# class BaseGetMethods(Generic[TableEntity]):
 class BaseGetMethods(StatusOperationGetters):
     """ Base class for common read operations (GET) in repositories. """
     def __init__(self, entity: Type[TableEntity], converter) -> None:

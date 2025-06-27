@@ -7,8 +7,8 @@ from src.infra.api.mercadolivre.auth import AuthResponse
 from src.infra.api.mercadolivre.items import ItemsRequests
 from src.infra.api.mercadolivre.models import MeliResponse
 from src.infra.db.models.produtos import Product
-from src.infra.db.repositories import ProdutosRepository
-from src.infra.db.repositories.models import ResponseCode
+from src.infra.db.repo import ProdutosRepository
+from src.infra.db.repo.models import ResponseCode
 from src.app.shared.validators import ValidatorsProtocol, EmptyColumnsValidator, EmptyCredentialColumnsValidator
 from .models import ProdutosOperationProtocol
 from .tools import ProdutosValidator
@@ -65,13 +65,21 @@ class StatusChanger(ProdutosOperationProtocol):
             
             if not response.success:
                 self.log.dev.exception(str(response))
-                self.repo.update.log_error(id=line.id, cod_erro=ResponseCode.PROGRAM_ERROR, log_erro=response.error)
+                self.repo.update.log_error(
+                    id=line.id, 
+                    return_code=ResponseCode.PROGRAM_ERROR, 
+                    log_erro=response.error
+                )
             
             status_product: str = response.data.get("status")
             print(f"{status_product = }")
             
             if status_product != self.oper_status:
-                self.repo.update.log_error(id=line.id, cod_erro=ResponseCode.PROGRAM_ERROR, log_erro=response.error)
+                self.repo.update.log_error(
+                    id=line.id, 
+                    return_code=ResponseCode.PROGRAM_ERROR, 
+                    log_erro=response.error
+                )
             
             self.log.user.info(f"[DB-ID: {line.id} | Cod: {line.identfiers.cod_produto}] Produto {self.log_action_name} com sucesso!")
             line.produto_status = status_product
@@ -80,7 +88,7 @@ class StatusChanger(ProdutosOperationProtocol):
                 log.dev.exception(f"{e}")
                 self.repo.update.log_error(
                     id=line.id, 
-                    cod_erro=ResponseCode.PROGRAM_ERROR, 
+                    return_code=ResponseCode.PROGRAM_ERROR, 
                     log_erro=f"Um erro inesperado ocorreu durante a operação: {e}"
                 )
             
@@ -227,7 +235,7 @@ class Deletion(ProdutosOperationProtocol):
         self.log.dev.exception(error_msg)
         self.repo.update.log_error(
             line.id, 
-            cod_erro=ResponseCode.PROGRAM_ERROR, 
+            return_code=ResponseCode.PROGRAM_ERROR, 
             log_erro=error_msg
         )
     

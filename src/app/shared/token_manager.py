@@ -2,9 +2,9 @@
 
 from typing import Optional
 
-from ...infra.db.repositories.interfaces.base_protocol import TableRepositoryProtocol
+from ...infra.db.repo.interfaces.base_protocol import TableRepositoryProtocol
 from ...infra.api.mercadolivre.auth import MeliAuthCredentials, AuthResponse
-from ...infra.db.repositories.models import DataclassTable
+from ...infra.db.repo.models import DataclassTable
 
 
 # Criar um modélo de repositorie para usar como typing

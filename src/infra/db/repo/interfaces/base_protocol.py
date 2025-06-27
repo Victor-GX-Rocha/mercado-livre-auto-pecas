@@ -1,7 +1,6 @@
-""" Repositorie model for typing """
+""" Repositorie model for typing. """
 
 from typing import Protocol, TypeVar
-# from dataclasses import # eu queria algo que realmente represente uma dataclass de forma genérica
 
 DataclassTable = TypeVar("DataclassTable")
 

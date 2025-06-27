@@ -1,4 +1,4 @@
-""" Base for database conecatation. Create conection Engine """
+""" Base for database conecatation. Create conection Engine. """
 
 # database.py
 
@@ -19,3 +19,4 @@ InternalSession = sessionmaker(bind=engine)
 def init_database():
     """ Start the database """
     Base.metadata.create_all(engine)
+    print("Starting database")

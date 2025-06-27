@@ -44,7 +44,6 @@ class ProdutosConverter:
             id=orm_obj.id,
             credentials=orm_obj.credentials,
             controlers=orm_obj.controlers,
-            error_logers=orm_obj.error_logers,
             identfiers=orm_obj.identfiers,
             sale=orm_obj.sale,
             shippiment=orm_obj.shippiment,
@@ -58,6 +57,7 @@ class ProdutosConverter:
     def orms_convert(self, orm_objs: list[Produtos]) -> list[Product]:
         """
         Convert a multiple Pordutos ORM entities to Prodcut datclasses.
+        
         Args:
             orm_objs (list[Produtos]): list of converted dataclass instances.
         Returns:
