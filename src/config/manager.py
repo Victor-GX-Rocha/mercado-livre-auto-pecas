@@ -1,4 +1,4 @@
-""" Environment variable manager """
+""" Environment variable manager. """
 
 import sys
 from typing import Dict, List, Optional

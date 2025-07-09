@@ -76,7 +76,7 @@ class ProdutosApplication:
     
     def _execute_operations(self, user_lines: list[Product], token: AuthResponse):
         oper_lines = GroupBy.column(user_lines, "controlers.operacao")
-        print(f"{oper_lines.keys() = }")
+        # print(f"{oper_lines.keys() = }")
         
         for oper_id, items in oper_lines.items():
             try:

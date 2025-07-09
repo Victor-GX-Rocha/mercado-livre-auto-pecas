@@ -1,4 +1,4 @@
-""" Difine the valitarors who will be used on the EnvManager """
+""" Difine the valitarors who will be used on the EnvManager. """
 
 import os
 from typing import Protocol, List, Dict

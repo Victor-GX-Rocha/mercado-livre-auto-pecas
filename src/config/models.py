@@ -1,4 +1,4 @@
-""" Defines the model env objects """
+""" Defines the model env objects. """
 
 from dataclasses import dataclass
 

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from src.infra.db.models.base import MeliCredentials
+from src.infra.db.models.bases import MeliCredentials
 
 @dataclass
 class Controlers:

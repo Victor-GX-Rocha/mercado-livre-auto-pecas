@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.schema import CreateSequence
 from dataclasses import dataclass
 
-from ..base import Base
+from ..bases import Base
 
 
 @dataclass

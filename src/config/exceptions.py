@@ -1,10 +1,5 @@
-# database > env_system > env_exceptions.py
+""" Centralize the .env enviroment errors """
 
-"""
-Centralize the .env enviroment errors
-"""
-
-# from src.core.exceptions import ConfigValidationError
 from ..core.exceptions import ConfigValidationError
 
 

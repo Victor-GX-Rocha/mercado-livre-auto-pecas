@@ -4,7 +4,7 @@ from sqlalchemy import event, Integer, String, Text, Boolean, Sequence, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, composite #DeclarativeBase, 
 from sqlalchemy.schema import CreateSequence
 
-from ..base import Base
+from ..bases import Base
 from .data_class import (
     MeliCredentials,
     Controlers,

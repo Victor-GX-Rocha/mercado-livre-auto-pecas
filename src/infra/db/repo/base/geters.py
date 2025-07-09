@@ -7,7 +7,7 @@ from src.infra.db.repo.models import ResponseCode, TableEntity, DataclassTable
 class StatusOperationGetters:
     """ Finders based on status_operacao_id column value. Pressets search methods for user interface. """
     
-    def by_status_operacao(self, operacao: int) -> list[DataclassTable]:
+    def by_column_value(self, operacao: int) -> list[DataclassTable]:
         """
         Pick all lines with specified `operacao` value.
         
@@ -22,12 +22,12 @@ class StatusOperationGetters:
     
     def pending_operations(self) -> list[TableEntity]:
         """ Get pending operations. """
-        return self.by_status_operacao(ResponseCode.PENDING)
+        return self.by_column_value(ResponseCode.PENDING)
     
     def completed_operations(self) -> list[TableEntity]:
         """ Get completed operations. """
-        return self.by_status_operacao(ResponseCode.SUCCESS)
+        return self.by_column_value(ResponseCode.SUCCESS)
     
     def in_process_operations(self) -> list[TableEntity]:
         """ Get in-process operations. """
-        return self.by_status_operacao(ResponseCode.EXECUTING)
+        return self.by_column_value(ResponseCode.EXECUTING)

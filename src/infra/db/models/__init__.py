@@ -7,26 +7,17 @@ Provides:
 - Produtos: Produtos table SQLAlchemy dataclass entity
 """
 
-from .base import MeliCredentials, Base
-from .produtos import Produtos
+from .bases import MeliCredentials, Base
+from .produtos import Produtos, Product
+from .produtos_status import ProdutosStatusORM, ProdutosStatusDataclass, ProdutosStausConverter
 # from .produtos import *
 
 __version__ = "v.0.0.1"
 __all__ = [
     "__version__",
     
-    "MeliCredentials",
-    "Base",
+    "MeliCredentials", "Base",
     
-    "Produtos"
-    
-    # "Controlers",
-    # "ErrorLoggers",
-    # "Identifiers",
-    # "SaleData",
-    # "ShippimentData",
-    # "CategoryData",
-    # "TecnicalData",
-    # "DimensionsData",
-    # "Product"
+    "Produtos", "Product",
+    "ProdutosStatusORM", "ProdutosStatusDataclass", "ProdutosStausConverter"
 ]

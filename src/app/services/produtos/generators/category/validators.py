@@ -146,11 +146,6 @@ class CategoryValidator:
             response = validator.validate(product, category_data)
             if not response.is_valid:
                 causes.append(response.reason)
-        
         if causes:
-            return ValidationResponse(
-                reason=f"Um total de {len(causes)} validadores recusaram a categoria.",
-                causes=causes
-            )
-        
+            return ValidationResponse(causes=causes)
         return ValidationResponse(True)

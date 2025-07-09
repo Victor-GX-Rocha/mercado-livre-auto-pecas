@@ -1,10 +1,10 @@
 .env
+.venv
 teste.py
 commands.sql
 **/__pycache__/
 *.json
 *.ipynb
-*.sql
 *.log
 *.ml
 *.exe
