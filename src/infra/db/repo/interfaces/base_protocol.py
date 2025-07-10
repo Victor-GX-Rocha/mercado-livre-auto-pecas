@@ -1,8 +1,10 @@
 """ Repositorie model for typing. """
 
 from typing import Protocol, TypeVar
+from src.infra.db.repo.models import ResponseCode
 
 DataclassTable = TypeVar("DataclassTable")
+DataclassTableLine = TypeVar("DataclassTableLine")
 
 class OrmTable:...
 
@@ -38,7 +40,28 @@ class StatusOperationGettersProtocol(Protocol):
 
 class LoggersProtocol:
     """ Basic common logers for any table who conatains the cod_erro, log_erro columns"""
-    def log_error(self, id: int, cod_erro: int, log_erro: str) -> None:...
+    def log_error(self, id: int, return_code: int, log_erro: str) -> None:...
+    def log_success_code(self, id: int, return_code: int = ResponseCode.SUCCESS) -> None:
+        """
+        Log a simple message with the code sucess.
+        Args:
+            id (int): Line ID.
+            return_code (int): Success code number. 
+        """
+    def got_to_sleep(self, id: int, return_code: int = ResponseCode.SUCCESS) -> None:
+        """
+        Change the status operation to another number to make it "sleep"
+        Args:
+            id (int): Line ID.
+            return_code (int): Code number. 
+        """
+    def executing(self, id: int, return_code: int = ResponseCode.EXECUTING) -> None:
+        """
+        Change the status operation to another number to make it "sleep"
+        Args:
+            id (int): Line ID.
+            return_code (int): Success code number. 
+        """
 
 class TableGetMethodsProtocol(OrmEntityProtocol, StatusOperationGettersProtocol):...
 class TableUpdateMethodsProtocol(OrmEntityProtocol, LoggersProtocol):...

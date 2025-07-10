@@ -27,7 +27,7 @@ class ProdutosUpdateMethods(BaseUpdateMethods):
             id (int): Line id.
             status (str): Product status on mercado libre.
         """
-        with session_scope as session:
+        with session_scope() as session:
             line: ProdutosStatusORM = session.query(self.entity).get(id)
             line.status_produto = status
             line.cod_retorno = ResponseCode.SUCCESS

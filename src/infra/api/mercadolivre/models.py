@@ -41,3 +41,5 @@ class MeliResponse:
     data: Optional[Any] = None
     error: Optional[MeliErrorDetail] = None
     http_status: Optional[int] = None
+
+class MeliRequestFail(Exception):...
