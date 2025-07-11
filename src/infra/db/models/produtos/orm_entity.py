@@ -7,7 +7,7 @@ from sqlalchemy.schema import CreateSequence
 from ..bases import Base
 from .data_class import (
     MeliCredentials,
-    Controlers,
+    OperationControllers,
     Identifiers,
     SaleData,
     ShippimentData,
@@ -43,7 +43,7 @@ class Produtos(Base):
     operacao: Mapped[int] = mapped_column(Integer)
     cod_retorno: Mapped[int] = mapped_column(Integer)
     log_erro: Mapped[str] = mapped_column(Text)
-    controlers = composite(Controlers, 
+    controllers = composite(OperationControllers, 
         "operacao",
         "cod_retorno",
         "log_erro",

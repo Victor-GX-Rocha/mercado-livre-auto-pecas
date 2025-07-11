@@ -26,5 +26,5 @@ class InvalidOperation:
             self.repo.update.log_error(
                 id=line.id, 
                 return_code=ResponseCode.TABLE_ERROR, 
-                log_erro=f"Operação inválida: {line.controlers.operacao}"
+                log_erro=f"Operação inválida: {line.controllers.operacao}"
             )

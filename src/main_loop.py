@@ -6,7 +6,8 @@ from .core import log
 from .config import AppConfigManager
 from .app.services import (
     ProdutosApplication, 
-    StatusApplication
+    StatusApplication,
+    ProdutosCategoryApplication
 )
 
 config = AppConfigManager()
@@ -14,6 +15,7 @@ database_config = config.load_database_config()
 
 app_produtos = ProdutosApplication()
 app_status = StatusApplication()
+app_category = ProdutosCategoryApplication()
 
 
 class MainLoop:
@@ -32,7 +34,8 @@ class MainLoop:
                 
                 # Applications
                 # app_produtos.execute()
-                app_status.execute()
+                # app_status.execute()
+                app_category.execute()
                 time.sleep(app_config.timer)
                 # break
         except KeyboardInterrupt as k:

@@ -119,20 +119,28 @@ CREATE TABLE produtos_status(
 
 CREATE TABLE operacao_categoria_ml (
   id INTEGER PRIMARY KEY,
+  
+  -- Credenciais de usuário do mercado livre
   client_id VARCHAR(32),
   client_secret VARCHAR(64),
   redirect_uri VARCHAR(256),
   refresh_token VARCHAR(256),
-  status_operacao_id INTEGER,
+  
+  -- Controle de execução
   operacao INTEGER,
+  cod_retorno INTEGER,
+  log_erro TEXT,
+  
+  -- Sobre o produto
+  cod_produto VARCHAR(12),
+  atualizado character(1) DEFAULT 'N'::bpchar,
+  
+  -- Categoria
   categoria_id VARCHAR(20),
   nome_categoria TEXT,
-  titulo_produto VARCHAR(60),
-  cod_erro INTEGER,
-  log_erro TEXT,
-  atualizado character(1) DEFAULT 'N'::bpchar,
-  cod_produto VARCHAR(12),
+  titulo_produto VARCHAR(60)
 );
+
 
 CREATE TABLE cloudinary (
   id INTEGER PRIMARY KEY,

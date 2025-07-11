@@ -75,7 +75,7 @@ class ProdutosApplication:
                 print(f"Falha ao obter token para usuário {user}")
     
     def _execute_operations(self, user_lines: list[Product], token: AuthResponse):
-        oper_lines = GroupBy.column(user_lines, "controlers.operacao")
+        oper_lines = GroupBy.column(user_lines, "controllers.operacao")
         # print(f"{oper_lines.keys() = }")
         
         for oper_id, items in oper_lines.items():

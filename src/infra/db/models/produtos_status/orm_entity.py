@@ -1,12 +1,12 @@
-""" SQLAlchemy entity for table produtos_status """
+""" SQLAlchemy entity for table produtos_status. """
 
-from sqlalchemy import event, Sequence, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, composite
+from sqlalchemy import event, Sequence, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.schema import CreateSequence
 
-from src.infra.db.models.bases import OrmTablesbase, MeliCredentials, Controlers
+from src.infra.db.models.bases import OrmBaseModel
 
-class ProdutosStatusORM(OrmTablesbase):
+class ProdutosStatusORM(OrmBaseModel):
     
     __tablename__: str = "produtos_status"
     id_seq = Sequence("produtos_status_sq1")

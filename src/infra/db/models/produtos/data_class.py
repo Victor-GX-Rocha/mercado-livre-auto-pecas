@@ -6,7 +6,7 @@ from typing import Optional
 from src.infra.db.models.bases import MeliCredentials
 
 @dataclass
-class Controlers:
+class OperationControllers:
     """ Operation control columns. """
     operacao: int
     cod_retorno: int
@@ -82,7 +82,7 @@ class Product:
     """ Dataclass for `Produtos` table. """
     id: int
     credentials: MeliCredentials
-    controlers: Controlers
+    controllers: OperationControllers
     identfiers: Identifiers
     sale: SaleData
     shippiment: ShippimentData

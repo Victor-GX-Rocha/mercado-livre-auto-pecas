@@ -3,7 +3,7 @@
 from src.core import log
 from src.app.shared.oganizer import GroupBy
 from src.app.models import ApplicationProtocol
-from src.app.shared.operations import InvalidOperation, TableOperationProtocol
+from src.app.shared.operations import InvalidOperation, TableOperationProtocol, TableOperationFactoryProtocol
 from src.app.shared.token_manager import MeliTokenManager
 from src.infra.db.repo import ProdutosStatusRepository
 from src.infra.db.models import ProdutosStatusDataclass
@@ -13,7 +13,7 @@ from src.infra.db.repo import ProdutosStatusRepository
 from .check_status import StatusChecker
 
 
-class StatusOperationFactory:
+class StatusOperationFactory(TableOperationFactoryProtocol):
     def __init__(
         self,
         log: log,
@@ -64,7 +64,7 @@ class StatusApplication(ApplicationProtocol):
                 print(f"Falha ao obter token para usuário {user}")
     
     def _execute_operations(self, user_lines: list[ProdutosStatusDataclass], token: AuthResponse) -> None:
-        oper_lines = GroupBy.column(user_lines, "controlers.operacao")
+        oper_lines = GroupBy.column(user_lines, "controllers.operacao")
         # print(f"{oper_lines.keys() = }")
         
         for oper_id, items in oper_lines.items():

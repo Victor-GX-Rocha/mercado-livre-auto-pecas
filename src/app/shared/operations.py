@@ -16,7 +16,7 @@ class TableOperationProtocol(Protocol):
     def execute(self, lines: list[DataclassTableLine], token: AuthResponse) -> None:
         """ Execute the class main funcionality. """
 
-class TableOperationFactory(Protocol):
+class TableOperationFactoryProtocol(Protocol):
     def create(self, operation_id: int) -> TableOperationProtocol:
         """ Construct and returns an object based on it's ID. """
 
@@ -34,7 +34,7 @@ class InvalidOperation:
             self.repo.update.log_error(
                 id=line.id, 
                 return_code=ResponseCode.TABLE_ERROR, 
-                log_erro=f"Operação inválida: {line.controlers.operacao}"
+                log_erro=f"Operação inválida: {line.controllers.operacao}"
             )
 
 class JustSleep:

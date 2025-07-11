@@ -43,7 +43,7 @@ class ProdutosConverter:
         return Product(
             id=orm_obj.id,
             credentials=orm_obj.credentials,
-            controlers=orm_obj.controlers,
+            controllers=orm_obj.controllers,
             identfiers=orm_obj.identfiers,
             sale=orm_obj.sale,
             shippiment=orm_obj.shippiment,
