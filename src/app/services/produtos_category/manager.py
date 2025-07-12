@@ -4,28 +4,38 @@ from src.core import log
 from src.infra.api.mercadolivre.auth import AuthResponse, MeliAuthCredentials
 from src.infra.db.models.produtos_category import ProdutosCategoryDataclass
 from src.infra.db.repo import ProdutosCategroyRepository
+from src.infra.api.mercadolivre.items import ItemsRequests
 from src.app.shared.operations import TableOperationFactoryProtocol, InvalidOperation
 from src.app.shared.token_manager import MeliTokenManager
 from src.app.models import ApplicationProtocol
 from src.app.shared.oganizer import GroupBy
+from .operations import CategoryIDByPath, CategoryIDByTitle, PathByCategoryID
+
+
 
 class ProdutosCategoryFactory(TableOperationFactoryProtocol):
-    def __init__(self, log: log, repo: ProdutosCategroyRepository):
+    def __init__(
+        self, log: log, 
+        repo: ProdutosCategroyRepository, 
+        items_requests: ItemsRequests
+    ) -> None:
         self.log = log
         self.repo = repo
+        self.items_requests = items_requests
     
     def create(self, operation_id: int):
-        match operation_id:
-            case 1:
-                print("Caso: 1")
-            case 2:
-                print("Caso: 2")
-            case 21:
-                print("Caso: 2.1")
-            case 3:
-                print("Caso: 3")
-            case _:
-                return InvalidOperation()
+        
+        if operation_id == 1:
+            return CategoryIDByPath(self.log, self.repo)
+        
+        elif operation_id == 2 or operation_id == 21:
+            return CategoryIDByTitle(self.log, self.repo, self.items_requests)
+        
+        elif operation_id == 3:
+            return PathByCategoryID()
+        
+        return InvalidOperation(self.log, self.repo)
+
 
 
 class ProdutosCategoryApplication(ApplicationProtocol):
@@ -33,9 +43,11 @@ class ProdutosCategoryApplication(ApplicationProtocol):
         self.log = log
         self.repo = ProdutosCategroyRepository()
         self.meli_auth = MeliAuthCredentials()
+        self.items_requests = ItemsRequests()
         self.operation_factory = ProdutosCategoryFactory(
             log=self.log,
-            repo=self.repo
+            repo=self.repo,
+            items_requests=self.items_requests
         )
         self.token_manager = MeliTokenManager(
             repo=self.repo, 
@@ -46,7 +58,6 @@ class ProdutosCategoryApplication(ApplicationProtocol):
         pending_lines: list[ProdutosCategoryDataclass] = self.repo.get.pending_operations()
         
         if not pending_lines:
-            print("Nenhuma linha pendente no momento")
             return
         
         user_lines: dict[str, list[ProdutosCategoryDataclass]] = GroupBy.column(pending_lines, "credentials.client_id")

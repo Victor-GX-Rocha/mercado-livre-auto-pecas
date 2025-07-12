@@ -20,7 +20,8 @@ MeliContext = Literal[
     "get_items_info"
     "item_add_compatibilities"
     "get_models_by_brand",
-    "get_compatibilities"
+    "get_compatibilities",
+    "get_category_by_item_name"
 ]
 
 

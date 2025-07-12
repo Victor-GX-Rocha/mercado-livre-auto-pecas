@@ -15,6 +15,7 @@ class ProdutosCategoryORM(OrmBaseModel):
     
     id: Mapped[int] = mapped_column(
         Integer,
+        id_seq,
         primary_key=True,
         server_default=id_seq.next_value()
     )

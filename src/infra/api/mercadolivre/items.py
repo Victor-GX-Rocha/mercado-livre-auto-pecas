@@ -3,7 +3,7 @@
 from typing import Any
 
 from .client import MLBaseClient
-from .models import MeliResponse
+from .models import MeliResponse, MeliErrorDetail
 
 
 class ItemsRequests:
@@ -188,6 +188,88 @@ class ItemsRequests:
         
         return response
     
+    def get_category_by_item_name(
+            self,
+            access_token: str, 
+            item_name: str, 
+            limit: int = 8, 
+            site: str = "MLB"
+        ) -> MeliResponse:
+        """
+        Searches for relevant product categories using Mercado Libre's domain discovery API.
+        
+        Queries the '/sites/{site}/domain_discovery/search' endpoint to find category suggestions
+        based on product name. Useful for determining the appropriate category when listing new items.
+        
+        Args:
+            access_token: Valid access token for API authorization.
+            item_name: Product name or search query to find matching categories
+            limit: Number of results to return (must be between 1-8 per Mercado Libre restrictions)
+            site: Mercado Libre site ID (default "MLB" for Brazil)
+        
+        Returns:
+            MeliResponse: 
+                On success:
+                    success=True
+                    data=[
+                        {
+                            "category_id": str,   # Mercado Libre category ID
+                            "category_name": str, # Human-readable category name
+                            "attributes": list    # Required attributes for the category
+                        },
+                        ... 
+                    ]
+                On error:
+                    success=False
+                    error=MeliErrorDetail(
+                        message=str,      # Error description
+                        context=str,      # Error context
+                        status_code=int   # HTTP status code (if available)
+                    )
+        
+        Raises:
+            ValueError: If limit is outside 1-8 range
+        
+        Examples:
+            Successful response:
+                >>> response = items_requests.get_category_by_item_name("valid_token", "Volante ducato", 2)
+                >>> response.data
+                [
+                    {"category_id": "MLB439438", "category_name": "Volantes", "attributes": [...]},
+                    {"category_id": "MLB116012", "category_name": "Acessórios", "attributes": [...]}
+                ]
+                
+            Error response (invalid limit):
+                >>> response = items_requests.get_category_by_item_name("token", "Produto", limit=10)
+                >>> response.error
+                MeliErrorDetail(
+                    message="O mercado livre permite apenas um limite entre 1 e 8.",
+                    context="get_category_by_item_name",
+                    status_code=400
+                )
+                
+        """
+        if limit < 1 or limit > 8:
+            return MeliResponse(
+                success=False,
+                error=MeliErrorDetail(
+                    message="O mercado livre permite apenas um limite entre 1 e 8.",
+                    context="get_category_by_item_name",
+                )
+            )
+        
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        
+        response: MeliResponse = self.client.get(
+            endpoint=f"/sites/{site}/domain_discovery/search?q={item_name}&limit={limit}",
+            context="get_item_info",
+            headers=headers
+        )
+        
+        return response
+    
     def add_compatibilities(
         self,
         access_token: str,
@@ -197,11 +279,12 @@ class ItemsRequests:
     ) -> MeliResponse:
         """
         Add a list of compatibilities on a product.
+        
         Args:
-            access_token (str): 
+            access_token (str): Valid access token for API authorization.
             product_id (str): 
             items_ids (list[str]): 
-            limit (int):
+            limit (int): Number of results to insert.
         Returns:
             MeliResponse:
         """

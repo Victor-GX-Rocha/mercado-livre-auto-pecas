@@ -1,4 +1,12 @@
-""" Shared operations. """
+"""
+Shared operations.
+
+Provides:
+    TableOperationProtocol: 
+    TableOperationFactoryProtocol: 
+    InvalidOperation: 
+    JustSleep: 
+"""
 
 from typing import Protocol, TypeVar, runtime_checkable
 
