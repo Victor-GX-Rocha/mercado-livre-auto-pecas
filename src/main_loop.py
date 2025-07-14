@@ -17,6 +17,16 @@ app_produtos = ProdutosApplication()
 app_status = StatusApplication()
 app_category = ProdutosCategoryApplication()
 
+# I think that it could be added on the future
+# from .app import AppFactory
+
+# app_produtos = AppFactory.produtos()
+# app_status = AppFactory.status()
+
+# app_category = AppFactory.category() 
+
+
+
 
 class MainLoop:
     """ Manages and controls the main program loop. """

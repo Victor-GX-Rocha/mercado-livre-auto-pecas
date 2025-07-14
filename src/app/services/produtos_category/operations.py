@@ -11,10 +11,13 @@ from src.app.shared.operations import TableOperationProtocol
 from src.app.shared.token_manager import MeliTokenManager
 from src.infra.api.mercadolivre.auth import AuthResponse
 from src.infra.api.mercadolivre.items import ItemsRequests
+from src.infra.api.mercadolivre.category import CategoryRequests
 from src.infra.api.mercadolivre.models import MeliResponse
 from src.infra.db.models.produtos_category import ProdutosCategoryDataclass
 from src.infra.db.repo import ProdutosCategroyRepository
 from src.infra.db.repo.models import ResponseCode
+from src.app.shared.operations import JustSleep
+from src.app.shared.category.finders import IDFinderByPath, CategoryFinderResponse
 from src.app.shared.validators import (
     ValidatorsProtocol, 
     EmptyColumnsValidator, 
@@ -22,19 +25,134 @@ from src.app.shared.validators import (
     OperationValidator
 )
 
-from src.app.shared.operations import JustSleep
+
+
+class InvalidValue(Exception):...
+class CategoryAPIError(Exception):...
+class CategoryNotFound(Exception):...
+class EmptyCategoryHierarchyError(Exception):...
 
 
 class CategoryIDByPath(TableOperationProtocol):
-    def __init__(self, log: log, repo: ProdutosCategroyRepository) -> None:
+    def __init__(self, log: log, repo: ProdutosCategroyRepository, category_requests: CategoryRequests) -> None:
         self.log = log
         self.repo = repo
+        self.category_requests = category_requests
+        self.category_finder = IDFinderByPath()
+        self.validator = OperationValidator(self.log, self.repo)
+        self.validators: list[ValidatorsProtocol] = [
+            EmptyCredentialColumnsValidator(),
+            EmptyColumnsValidator([
+                "category.nome_categoria"
+            ])
+        ]
     
     def execute(self, lines: list[ProdutosCategoryDataclass], token: AuthResponse) -> None:
         print(self.__class__.__name__)
         for line in lines:
-            JustSleep(self.repo).execute()
-
+            try:
+                
+                if not self.validator.validate(line, self.validators):
+                    continue
+                
+                self.repo.update.executing(id=line.id)
+                
+                if type(line.category.nome_categoria) != str:
+                    raise InvalidValue("A coluna nome_categoria deve conter um texto!")
+                
+                response: CategoryFinderResponse = self.category_finder.find(
+                    category_path=line.category.nome_categoria, 
+                    access_token=token.access_token
+                )
+                
+                if not response.success:
+                    raise CategoryAPIError(f"{response.error}")
+                
+                # category_id: str = self.get_category_id(
+                #     category_hierarchy=line.category.nome_categoria,
+                #     access_token=token.access_token
+                # )
+                
+                self.repo.update.register_category_id(
+                    id=line.id,
+                    category_id=response.result
+                )
+                
+            except (CategoryAPIError, CategoryNotFound) as e:
+                self.__handle_error(id=line.id, message=str(e))
+            
+            except InvalidValue as e:
+                self.__handle_error(id=line.id, message=str(e), return_code=ResponseCode.TABLE_ERROR)
+            
+            except Exception as e:
+                self.__handle_error(id=line.id, message=f"{[self.__class__.__name__]} Erro inesperado: {e}", log=True)
+    
+    
+    def get_category_id(self, category_hierarchy: str, access_token: str) -> str:
+        
+        hierarchies_names: list[str] = self._get_hierarchies_names(category_hierarchy)
+        root_categories: MeliResponse = self.category_requests.get_root_categories(access_token=access_token)
+        
+        if not root_categories.success:
+            raise CategoryAPIError(f"Falha ao obter as categorias raízes: {root_categories.error}")
+        
+        categories: list[dict[str, str]] = root_categories.data
+        
+        for level, name in enumerate(hierarchies_names):
+            current_category: dict[str, str] = self._filter_category_by_name(category_name=name, categories=categories)
+            
+            if level >= len(hierarchies_names) - 1:
+                break
+            
+            # current_category_data: dict[str, Any] = current_category_data.data
+            current_category_data: dict[str, Any] = self._get_category_data(current_category, access_token, name)
+            categories = current_category_data.get("children_categories", [])
+        
+        return current_category["id"]
+    
+    def _get_hierarchies_names(self, category_hierarchy: str) -> list[str]:
+        hierarchies_names: list[str] = [n.strip() for n in category_hierarchy.split(">")]
+        if not hierarchies_names:
+            raise InvalidValue(f"Caminho de hierarquia inválido!")
+        return hierarchies_names
+    
+    def _get_category_data(self, current_category: dict[str, str], access_token: str, name: str) -> dict[str, Any]:
+        current_category_id: str = current_category.get("id")
+        
+        current_category_data_response: MeliResponse = self.category_requests.get_category_data(
+            category_id=current_category_id, 
+            access_token=access_token
+        )
+        
+        if not current_category_data_response.success:
+            raise CategoryAPIError(f"Falha ao buscar dados da categoria {current_category_id}: {name}")
+        
+        return current_category_data_response.data
+    
+    def _filter_category_by_name(
+        self, 
+        category_name: str, 
+        categories: list[dict[str, str]]
+    ) -> dict[str, str] | None:
+        """
+        
+        Args:
+            category_name (str): 
+            categories (list[dict[str, str]]): 
+        """
+        normalized_name: str = category_name.strip().lower()
+        for cat in categories:
+            if cat["name"].strip().lower() == normalized_name:
+                return cat
+        raise CategoryNotFound(f"Categoria {category_name} descontinuada pelo mercado livre.")
+    
+    def __handle_error(self, id: int, message: str, log: bool=False, return_code: int =ResponseCode.PROGRAM_ERROR):
+        self.log.dev.exception(f"{message}") if log else None
+        self.repo.update.log_error(
+            id=id, 
+            return_code=return_code,
+            log_erro=message
+        )
 
 class CategoryIDByTitle(TableOperationProtocol):
     def __init__(self, log: log, repo: ProdutosCategroyRepository, items_requests: ItemsRequests) -> None:
@@ -105,360 +223,62 @@ class CategoryIDByTitle(TableOperationProtocol):
                 category_id=category_id
             )
 
-
-
-
 class PathByCategoryID(TableOperationProtocol):
-    def __init__(self, log: log, repo: ProdutosCategroyRepository) -> None:
+    def __init__(self, log: log, repo: ProdutosCategroyRepository, category_requests: CategoryRequests) -> None:
         self.log = log
         self.repo = repo
+        self.category_requests = category_requests
+        self.validator = OperationValidator(self.log, self.repo)
+        self.validators: list[ValidatorsProtocol] = [
+            EmptyCredentialColumnsValidator(),
+            EmptyColumnsValidator([
+                "category.categoria_id"
+            ])
+        ]
     
     def execute(self, lines: list[ProdutosCategoryDataclass], token: AuthResponse) -> None:
         print(self.__class__.__name__)
         for line in lines:
-            JustSleep(self.repo).execute()
-
-
-
-# from category_system import CategoryManager
-# from schemas.repositories.category_ml_table import CategoryMlTable
-# from API.mercado_livre.ml_manager import APIError, AuthManager
-
-# from typing import List, Dict, Any
-# from core.log import logging
-
-# auth = AuthManager()
-
-# class Operation_1:
-#     """ Operacao = 1 -> pesquisar usando o caminho completo da categoria. E retornar o id da categoria. """
-#     def __init__(self, category_manager: CategoryManager, category_repository: CategoryMlTable):
-#         self.category_manager = category_manager
-#         self.category_repository = category_repository
-#         self.auth = auth
-    
-#     def run(self, lines):
-#         for line in lines:
-#             # get token
-#             if not all(
-#                 [
-#                     line["client_id"],
-#                     line["client_secret"],
-#                     line["redirect_uri"],
-#                     line["refresh_token"]
-#                 ]
-#             ):
-#                 self.category_repository.log_error(
-#                     line_id=line['id'],
-#                     cod_erro=91,
-#                     log_erro='Informações de credencial de usuário ausentes!!',
-#                 )
-#                 continue
-            
-#             token = self.auth.get_refresh_token(
-#                 client_id=line["client_id"],
-#                 client_secret=line["client_secret"],
-#                 redirect_uri=line["redirect_uri"],
-#                 refresh_token=line["refresh_token"]
-#             )
-            
-#             if not token.get('success'):
-#                 self.category_repository.log_error(
-#                     line_id=line['id'],
-#                     log_erro=str(token.get('error')),
-#                 )
-#                 continue
-#             else:
-#                 response_token = token['data']
-#                 access_token = response_token['access_token']
+            try:
                 
-#                 print(response_token)
-#                 print(access_token)
-            
-#             if not access_token:
-#                 logging.warning('[Operation_1.run] Access token não obtido!')
-#                 continue
-            
-            
-            
-            
-            
-#             category_path: str = line["nome_categoria"]
-            
-#             category_id_response: dict = self.category_manager.id_finder.run(category_path, access_token=access_token)
-            
-#             if not category_id_response["success"]:
-#                 self.category_repository.log_error(
-#                     line_id=line["id"],
-#                     log_erro=category_id_response["error"],
-#                     cod_erro=88
-#                 )
-#                 continue
-            
-#             category_data: dict = category_id_response["data"]
-#             category_id = category_data.get("id")
-            
-            
-#             self.category_repository.category_table_log_success(
-#                 line_id=line["id"],
-#                 category_id=category_id,
-#                 category_name=category_path
-#             )
-    
-#     def find_id(self, category_path: str):
-#         category_id: str = self.category_manager.id_finder.run(category_path)
-        
-#         if not category_id:
-#             return None
-
-# # category_repository.category_table_log_success(
-# #     line_id=1,
-# #     category_id='MLBxxxx',
-# #     category_name='Acessórios para Veículos > Peças de Carros e Caminhonetes > Motor > Turbinas'
-# # )
-
-
-# class Operation_2:
-#     """ Operacao = 2 -> pesquisar por titulo_produto. Retornar o caminho completo da categoria e o id. """
-#     def __init__(self, category_manager: CategoryManager, category_repository: CategoryMlTable):
-#         self.category_manager = category_manager
-#         self.category_repository = category_repository
-#         self.auth = auth
-    
-#     def run(self, lines):
-#         for line in lines:
-            
-#             if not all(
-#                 [
-#                     line["client_id"],
-#                     line["client_secret"],
-#                     line["redirect_uri"],
-#                     line["refresh_token"]
-#                 ]
-#             ):
-#                 self.category_repository.log_error(
-#                     line_id=line['id'],
-#                     cod_erro=91,
-#                     log_erro='Informações de credencial de usuário ausentes!!',
-#                 )
-#                 continue
-            
-#             token = self.auth.get_refresh_token(
-#                 client_id=line["client_id"],
-#                 client_secret=line["client_secret"],
-#                 redirect_uri=line["redirect_uri"],
-#                 refresh_token=line["refresh_token"]
-#             )
-            
-#             if not token.get('success'):
-#                 self.category_repository.log_error(
-#                     line_id=line['id'],
-#                     log_erro=str(token.get('error'))
-#                 )
-#                 continue
-#             else:
-#                 response_token = token['data']
-#                 access_token = response_token['access_token']
+                if not self.validator.validate(line, self.validators):
+                    continue
                 
-#                 print(response_token)
-#                 print(access_token)
-            
-#             if not access_token:
-#                 logging.warning('[Operation_2.run] Access token não obtido!')
-#                 continue
-            
-#             print(line)
-#             title_response: dict = self.category_manager.title.run(line["titulo_produto"], access_token)
-            
-#             print(f"\n\ntitle response: {title_response} \n\n")
-            
-#             if not title_response["success"]:
-#                 self.category_repository.log_error(
-#                     line_id=line["id"],
-#                     log_erro=title_response["error"],
-#                     cod_erro=88
-#                 )
-#                 continue
-            
-#             if type(title_response["data"]) != list:
-#                 logging.info('Resultado retornado pela busca por título não é uma lista')
-#                 continue
-            
-#             meli_responses: list[dict] = title_response["data"]
-#             # meli_response: dict = title_response["data"][0]
-#             meli_response: dict = meli_responses[0]
-            
-#             if line["operacao"] == 2:
-#                 print(meli_response)
-#                 self.register_single_response(
-#                     line=line,
-#                     meli_response=meli_response,
-#                     access_token=access_token
-#                 )
-            
-#             elif line["operacao"] == 21:
-#                 print(meli_responses)
-#                 self.register_multiple_response(
-#                     line=line,
-#                     meli_responses=meli_responses,
-#                     access_token=access_token
-#                 )
-    
-#     def register_single_response(self, line: Dict[str, Any], meli_response: Dict, access_token: str):
-#         """ Só preecnhe 1 """
-        
-#         category_path = self.category_manager.title.get_category_path(meli_response, access_token)
-#         category_id = self.category_manager.title.get_category_id(meli_response)
-        
-#         # print(category_path, category_id)
-        
-#         logging.info(f"[DB-ID: {line['id']}] Registrando busca de categoria. {category_path=} {category_id=} ")
-        
-#         self.category_repository.category_table_log_success(
-#             line_id=line["id"],
-#             category_id=category_id,
-#             category_name=category_path
-#         )
-    
-#     def register_multiple_response(self, line: Dict[str, Any], meli_responses: List[Dict], access_token: str):
-#         """ Mais de um """
-        
-#         for index, meli_response in enumerate(meli_responses):
-            
-#             category_path = self.category_manager.title.get_category_path(meli_response, access_token)
-#             category_id = self.category_manager.title.get_category_id(meli_response)
-            
-#             print(category_path, category_id)
-#             logging.info(f"[DB-ID: {line['id']}] Registrando busca multipla de categoria. {category_path=} {category_id=} ")
-            
-            
-#             if index == 0:
-#                 self.category_repository.category_table_log_success(
-#                     line_id=line["id"],
-#                     category_id=category_id,
-#                     category_name=category_path
-#                 )
-#                 continue
-            
-#             self.category_repository.insert_log_success(
-#                 categoria_id=category_id,
-#                 nome_categoria=category_path,
-#                 titulo_produto=line["titulo_produto"]
-#             )
-
-
-# class Operation_3:
-#     """ Operacao = 3 -> pesquisar por id. Retornar o caminho completo da categoria. """
-#     def __init__(self, category_manager: CategoryManager, category_repository: CategoryMlTable):
-#         self.category_manager = category_manager
-#         self.category_repository = category_repository
-#         self.auth = auth
-    
-#     def run(self, lines):
-#         for line in lines:
-#             # Pegar token
-#             if not all(
-#                 [
-#                     line["client_id"],
-#                     line["client_secret"],
-#                     line["redirect_uri"],
-#                     line["refresh_token"]
-#                 ]
-#             ):
-#                 self.category_repository.log_error(
-#                     line_id=line['id'],
-#                     cod_erro=91,
-#                     log_erro='Informações de credencial de usuário ausentes!!',
-#                 )
-#                 continue
-            
-#             token = self.auth.get_refresh_token(
-#                 client_id=line["client_id"],
-#                 client_secret=line["client_secret"],
-#                 redirect_uri=line["redirect_uri"],
-#                 refresh_token=line["refresh_token"]
-#             )
-            
-#             if not token.get('success'):
-#                 self.category_repository.log_error(
-#                     line_id=line['id'],
-#                     log_erro=str(token.get('error')),
-#                 )
-#                 continue
-#             else:
-#                 response_token = token['data']
-#                 access_token = response_token['access_token']
+                self.repo.update.executing(id=line.id)
+                category_path: str = self._get_category_path(line=line, token=token)
+                self.repo.update.register_category_path(id=line.id, category_path=category_path)
                 
-#                 print(response_token)
-#                 print(access_token)
+            except (CategoryAPIError, EmptyCategoryHierarchyError) as e:
+                self.__handle_error(id=line.id, message=e)
             
-#             if not access_token:
-#                 logging.warning('[Operation_2.run] Access token não obtido!')
-#                 continue
-            
-            
-            
-#             title_response: dict = self.category_manager.title.run(line["titulo_produto"], access_token)
-            
-#             if not title_response["success"]:
-#                 self.category_repository.log_error(
-#                     line_id=line["id"],
-#                     log_erro=title_response["error"],
-#                     cod_erro=88
-#                 )
-#                 continue
-            
-#             if type(title_response["data"]) != list:
-#                 logging.info('Resultado retornado pela busca por título não é uma lista')
-#                 continue
-            
-            
-            
-            
-            
-            
-            
-#             category_id: str = line["categoria_id"]
-#             path_finder_response = self.category_manager.path_finder.run(category_id, access_token=access_token)
-            
-#             if not path_finder_response["success"]:
-#                 self.category_repository.log_error(
-#                     line_id=line["id"],
-#                     log_erro=path_finder_response["error"]
-#                 )
-#                 continue
-            
-#             category_path: str = str(path_finder_response["data"])
-            
-#             self.category_repository.category_table_log_success(
-#                 line_id=line["id"],
-#                 category_id=category_id,
-#                 category_name=category_path
-#             )
-
-
-# class CategoryRoutines:
-#     """ Manager and centralize all category operation types """
-#     def __init__(self, category_repository: CategoryMlTable):#commands_interface: ):
-#         self.category_manager = CategoryManager()
-#         self.operation_1 = Operation_1(self.category_manager, category_repository)
-#         self.operation_2 = Operation_2(self.category_manager, category_repository)
-#         self.operation_3 = Operation_3(self.category_manager, category_repository)
-        
+            except Exception as e:
+                self.__handle_error(id=line.id, message=f"[{self.__class__.__name__}] Excessão inesperada: {e}", log=True)
     
-#     def run(self, lines: dict):
-#         if lines.get(1):
-#             self.operation_1.run(lines.get(1))
-#         if lines.get(2):
-#             self.operation_2.run(lines.get(2))
-#         if lines.get(21):
-#             self.operation_2.run(lines.get(21))
-#         # if lines.get(2) or lines.get(21):
-#             # try:
-#             #     op_2 = {}
-#             #     op_2.update(lines.get(2))
-#             #     op_2.update(lines.get(21))
-#             #     print(f"{op_2}")
-#             # except Exception as e:
-#             #     logging.exception(e)
-#         if lines.get(3):
-#             self.operation_3.run(lines.get(3))
+    def _get_category_path(self, line: ProdutosCategoryDataclass, token: AuthResponse) -> str:
+        
+        response = self.category_requests.get_category_data(
+            category_id=line.category.categoria_id,
+            access_token=token.access_token
+        )
+        
+        if not response.success:
+            raise CategoryAPIError(str(response.error))
+        
+        category_data: dict[str, Any] = response.data
+        path: dict = category_data.get("path_from_root", [])
+        
+        if not path:
+            raise EmptyCategoryHierarchyError("Categoria sem hierarquia definida.")
+        
+        names: list[str] = [cat["name"] for cat in path]
+        category_path: str = " > ".join(names)
+        
+        return category_path
+    
+    def __handle_error(self, id: int, message: str, log=False):
+        self.log.dev.exception(f"{message}") if log else None
+        self.repo.update.log_error(
+            id=id, 
+            return_code=ResponseCode.PROGRAM_ERROR, 
+            log_erro=message
+        )

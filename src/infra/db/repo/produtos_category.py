@@ -22,7 +22,8 @@ class ProdutosCategroyGetMethods(BaseGetMethods):
         self.converter = ProdutosCategoryConverter()
 
 class ProdutosCategroyUpdateMethods(BaseUpdateMethods):
-    def register_single_result(self, id: int, category_id: str) -> None:
+    
+    def register_category_id(self, id: int, category_id: str) -> None:
         """
         
         Args:
@@ -33,6 +34,23 @@ class ProdutosCategroyUpdateMethods(BaseUpdateMethods):
             line: ProdutosCategoryORM = session.query(self.entity).get(id)
             line.categoria_id = category_id
             line.cod_retorno = ResponseCode.SUCCESS
+    
+    def register_single_result(self, id: int, category_id: str) -> None:
+        self.register_category_id(id=id, category_id=category_id)
+    
+    def register_category_path(self, id: int, category_path: str) -> None:
+        """
+        
+        Args:
+            id (int): Line id.
+            category_id (str): 
+        """
+        with session_scope() as session:
+            line: ProdutosCategoryORM = session.query(self.entity).get(id)
+            line.nome_categoria = category_path
+            line.cod_retorno = ResponseCode.SUCCESS
+    
+
 
 class ProdutosCategroyInsertMethods(BaseInsertMethods):
     def add_new_result(self, cod_produto: str, category_id: str) -> None:
@@ -53,9 +71,6 @@ class ProdutosCategroyInsertMethods(BaseInsertMethods):
 
 
 class ProdutosCategroyDeleteMethods(BaseDeleteMethods):...
-
-
-
 
 class ProdutosCategroyRepository:
     def __init__(self):

@@ -5,6 +5,7 @@ from src.infra.api.mercadolivre.auth import AuthResponse, MeliAuthCredentials
 from src.infra.db.models.produtos_category import ProdutosCategoryDataclass
 from src.infra.db.repo import ProdutosCategroyRepository
 from src.infra.api.mercadolivre.items import ItemsRequests
+from src.infra.api.mercadolivre.category import CategoryRequests
 from src.app.shared.operations import TableOperationFactoryProtocol, InvalidOperation
 from src.app.shared.token_manager import MeliTokenManager
 from src.app.models import ApplicationProtocol
@@ -17,22 +18,24 @@ class ProdutosCategoryFactory(TableOperationFactoryProtocol):
     def __init__(
         self, log: log, 
         repo: ProdutosCategroyRepository, 
-        items_requests: ItemsRequests
+        items_requests: ItemsRequests,
+        category_requests: CategoryRequests
     ) -> None:
         self.log = log
         self.repo = repo
         self.items_requests = items_requests
+        self.category_requests = category_requests
     
     def create(self, operation_id: int):
         
         if operation_id == 1:
-            return CategoryIDByPath(self.log, self.repo)
+            return CategoryIDByPath(self.log, self.repo, self.category_requests)
         
         elif operation_id == 2 or operation_id == 21:
             return CategoryIDByTitle(self.log, self.repo, self.items_requests)
         
         elif operation_id == 3:
-            return PathByCategoryID()
+            return PathByCategoryID(self.log, self.repo, self.category_requests)
         
         return InvalidOperation(self.log, self.repo)
 
@@ -44,10 +47,12 @@ class ProdutosCategoryApplication(ApplicationProtocol):
         self.repo = ProdutosCategroyRepository()
         self.meli_auth = MeliAuthCredentials()
         self.items_requests = ItemsRequests()
+        self.category_requests = CategoryRequests()
         self.operation_factory = ProdutosCategoryFactory(
             log=self.log,
             repo=self.repo,
-            items_requests=self.items_requests
+            items_requests=self.items_requests,
+            category_requests=self.category_requests
         )
         self.token_manager = MeliTokenManager(
             repo=self.repo, 
