@@ -16,7 +16,6 @@ from src.infra.api.mercadolivre.models import MeliResponse
 from src.infra.db.models.produtos_category import ProdutosCategoryDataclass
 from src.infra.db.repo import ProdutosCategroyRepository
 from src.infra.db.repo.models import ResponseCode
-from src.app.shared.operations import JustSleep
 from src.app.shared.category.finders import IDFinderByPath, CategoryFinderResponse
 from src.app.shared.validators import (
     ValidatorsProtocol, 
@@ -26,15 +25,30 @@ from src.app.shared.validators import (
 )
 
 
-
 class InvalidValue(Exception):...
 class CategoryAPIError(Exception):...
 class CategoryNotFound(Exception):...
 class EmptyCategoryHierarchyError(Exception):...
 
 
-class CategoryIDByPath(TableOperationProtocol):
+class CategoryIdFromPathFinder(TableOperationProtocol):
+    """
+    Finds Mercado Libre category IDs using full category paths.
+    
+    This operation:
+        1. Takes a full category path (e.g., "Eletrônicos > Celulares > Smartphones").
+        2. Queries Mercado Libre's API to find the matching category ID.
+        3. Updates the database with the found category ID.
+    """
     def __init__(self, log: log, repo: ProdutosCategroyRepository, category_requests: CategoryRequests) -> None:
+        """
+        Initialize the category ID finder operation.
+        
+        Args:
+            log: Logger instance for error tracking.
+            repo: Repository for database operations.
+            category_requests: API client for category services.
+        """
         self.log = log
         self.repo = repo
         self.category_requests = category_requests
@@ -48,6 +62,19 @@ class CategoryIDByPath(TableOperationProtocol):
         ]
     
     def execute(self, lines: list[ProdutosCategoryDataclass], token: AuthResponse) -> None:
+        """
+        Process multiple lines records to find and register category IDs.
+        
+        Args:
+            lines: List of line category records.
+            token: Valid Mercado Libre authentication credentials
+        
+        Raises:
+            InvalidValue: When category path is not a string.
+            CategoryAPIError: When API returns error.
+            CategoryNotFound: When path doesn't match any category.
+            Exception: Unexpected errors.
+        """
         print(self.__class__.__name__)
         for line in lines:
             try:
@@ -87,6 +114,16 @@ class CategoryIDByPath(TableOperationProtocol):
             except Exception as e:
                 self.__handle_error(id=line.id, message=f"{[self.__class__.__name__]} Erro inesperado: {e}", log=True)
     
+    def __handle_error(self, id: int, message: str, log: bool=False, return_code: int =ResponseCode.PROGRAM_ERROR):
+        self.log.dev.exception(f"{message}") if log else None
+        self.repo.update.log_error(
+            id=id, 
+            return_code=return_code,
+            log_erro=message
+        )
+
+
+''' # Discarded
     
     def get_category_id(self, category_hierarchy: str, access_token: str) -> str:
         
@@ -146,15 +183,9 @@ class CategoryIDByPath(TableOperationProtocol):
                 return cat
         raise CategoryNotFound(f"Categoria {category_name} descontinuada pelo mercado livre.")
     
-    def __handle_error(self, id: int, message: str, log: bool=False, return_code: int =ResponseCode.PROGRAM_ERROR):
-        self.log.dev.exception(f"{message}") if log else None
-        self.repo.update.log_error(
-            id=id, 
-            return_code=return_code,
-            log_erro=message
-        )
+'''
 
-class CategoryIDByTitle(TableOperationProtocol):
+class CategoryIDFromTitle(TableOperationProtocol):
     def __init__(self, log: log, repo: ProdutosCategroyRepository, items_requests: ItemsRequests) -> None:
         self.log = log
         self.repo = repo
@@ -202,10 +233,16 @@ class CategoryIDByTitle(TableOperationProtocol):
     
     def _register_results(self, line: ProdutosCategroyRepository, categories_response: list[dict[str, Any]]) -> None:
         """
+        Process and store category search results.
         
         Args:
-            line (ProdutosCategroyRepository):
-            categories_response (list[dict[str, Any]]): Categories content.
+            line: Product record being processed.
+            categories_response: API response containing:
+                [{
+                    "category_id": str,
+                    "category_name": str,
+                    "attributes": list
+                }]
         """
         for index, category in enumerate(categories_response):
             category_id: str = category.get("category_id")

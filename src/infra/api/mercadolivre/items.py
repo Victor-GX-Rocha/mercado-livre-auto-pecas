@@ -10,6 +10,7 @@ class ItemsRequests:
     """ Requests for /items endpoints. """
     def __init__(self):
         self.client = MLBaseClient()
+        self.ROOT_ENDPOINT: str = "/items"
     
     def publish(self, access_token: str, publication_data: dict[str, Any]) -> MeliResponse:
         """
@@ -27,7 +28,7 @@ class ItemsRequests:
         }
         
         response: MeliResponse = self.client.post(
-            endpoint="/items",
+            endpoint=self.ROOT_ENDPOINT,
             context="item_publication",
             headers=headers,
             json=publication_data
@@ -35,7 +36,13 @@ class ItemsRequests:
         
         return response
     
-    def add_description(self, access_token: str, item_id: str, descrption: str, change_description: bool = False) -> MeliResponse:
+    def add_description(
+        self, 
+        access_token: str, 
+        item_id: str, 
+        descrption: str, 
+        change_description: bool = False
+    ) -> MeliResponse:
         """
         Add a description to a product on mercado libre.
         Args:
@@ -45,6 +52,9 @@ class ItemsRequests:
         Returns:
             MeliResponse:
         """
+        
+        if not "MLB" in item_id:
+            return self.__no_item_id(item_id, "item_description")
         
         headers: dict[str, str] = {
             'Authorization': f'Bearer {access_token}',
@@ -59,7 +69,7 @@ class ItemsRequests:
         
         response: MeliResponse = self.client.request(
             method=method,
-            endpoint=f"/items/{item_id}/description",
+            endpoint=f"{self.ROOT_ENDPOINT}/{item_id}/description",
             context="item_description",
             headers=headers,
             json=payload
@@ -78,12 +88,15 @@ class ItemsRequests:
             MeliResponse:
         """
         
+        if not "MLB" in item_id:
+            return self.__no_item_id(item_id, "item_description")
+        
         headers: dict[str, str] = {
             'Authorization': f'Bearer {access_token}'
         }
         
         response: MeliResponse = self.client.get(
-            endpoint=f"/items/{item_id}/description",
+            endpoint=f"{self.ROOT_ENDPOINT}/{item_id}/description",
             context="item_description",
             headers=headers
         )
@@ -101,6 +114,9 @@ class ItemsRequests:
             MeliResponse:
         """
         
+        if not "MLB" in item_id:
+            return self.__no_item_id(item_id, "item_editation")
+        
         headers = {
             'Authorization': f'Bearer {access_token}',
             'Content-Type': 'application/json',
@@ -108,7 +124,7 @@ class ItemsRequests:
         }
         
         response: MeliResponse = self.client.put(
-            endpoint=f"/items/{item_id}",
+            endpoint=f"{self.ROOT_ENDPOINT}/{item_id}",
             context="item_editation",
             headers=headers,
             json=edition_data
@@ -116,7 +132,13 @@ class ItemsRequests:
         
         return response
     
-    def list_items(self, access_token: str, user_id: str, limit: int = 50, offset: int = 0) -> MeliResponse:
+    def list_items(
+        self, 
+        access_token: str, 
+        user_id: str, 
+        limit: int = 50, 
+        offset: int = 0
+    ) -> MeliResponse:
         """
         List the items form a user on mercado libre.
         Args:
@@ -131,7 +153,7 @@ class ItemsRequests:
         }
         
         response: MeliResponse = self.client.get(
-            endpoint=f"/users/{user_id}/items/search?limit={limit}&offset={offset}",
+            endpoint=f"/users/{user_id}{self.ROOT_ENDPOINT}/search?limit={limit}&offset={offset}",
             context="items_listing",
             headers=headers
         )
@@ -176,12 +198,15 @@ class ItemsRequests:
             MeliResponse:
         """
         
+        if not "MLB" in item_id:
+            return self.__no_item_id(item_id, "get_item_info")
+        
         headers = {
             'Authorization': f'Bearer {access_token}'
         }
         
         response: MeliResponse = self.client.get(
-            endpoint=f"/items/{item_id}",
+            endpoint=f"{self.ROOT_ENDPOINT}/{item_id}",
             context="get_item_info",
             headers=headers
         )
@@ -189,12 +214,12 @@ class ItemsRequests:
         return response
     
     def get_category_by_item_name(
-            self,
-            access_token: str, 
-            item_name: str, 
-            limit: int = 8, 
-            site: str = "MLB"
-        ) -> MeliResponse:
+        self,
+        access_token: str, 
+        item_name: str, 
+        limit: int = 8, 
+        site: str = "MLB"
+    ) -> MeliResponse:
         """
         Searches for relevant product categories using Mercado Libre's domain discovery API.
         
@@ -238,7 +263,7 @@ class ItemsRequests:
                     {"category_id": "MLB439438", "category_name": "Volantes", "attributes": [...]},
                     {"category_id": "MLB116012", "category_name": "Acessórios", "attributes": [...]}
                 ]
-                
+            
             Error response (invalid limit):
                 >>> response = items_requests.get_category_by_item_name("token", "Produto", limit=10)
                 >>> response.error
@@ -247,7 +272,7 @@ class ItemsRequests:
                     context="get_category_by_item_name",
                     status_code=400
                 )
-                
+            
         """
         if limit < 1 or limit > 8:
             return MeliResponse(
@@ -303,9 +328,18 @@ class ItemsRequests:
         payload = {"products": products}
         
         response: MeliResponse = self.client.post(
-            endpoint=f"/items/{product_id}/compatibilities",
+            endpoint=f"{self.ROOT_ENDPOINT}/{product_id}/compatibilities",
             context="item_add_compatibilities",
             headers=headers,
             json=payload
         )
         return response
+    
+    def __no_item_id(self, item_id: str, context: str) -> MeliResponse:
+        return MeliResponse(
+            success=False,
+            error=MeliErrorDetail(
+                message=f'Você esqueceu de inserir "MLB" antes do ID do produto. Corrija {item_id} para MLB{item_id}. Processo interrompido para verificação manual. Tenha certeza se é este realmente o produto que quer operar.',
+                context=context
+            )
+        )

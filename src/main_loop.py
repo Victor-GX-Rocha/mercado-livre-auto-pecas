@@ -4,28 +4,11 @@ import time
 
 from .core import log
 from .config import AppConfigManager
-from .app.services import (
-    ProdutosApplication, 
-    StatusApplication,
-    ProdutosCategoryApplication
-)
+from .app import App
+
 
 config = AppConfigManager()
 database_config = config.load_database_config()
-
-app_produtos = ProdutosApplication()
-app_status = StatusApplication()
-app_category = ProdutosCategoryApplication()
-
-# I think that it could be added on the future
-# from .app import AppFactory
-
-# app_produtos = AppFactory.produtos()
-# app_status = AppFactory.status()
-
-# app_category = AppFactory.category() 
-
-
 
 
 class MainLoop:
@@ -43,9 +26,10 @@ class MainLoop:
                     break
                 
                 # Applications
-                # app_produtos.execute()
-                # app_status.execute()
-                app_category.execute()
+                App.produtos.execute()
+                App.status.execute()
+                App.category.execute()
+                
                 time.sleep(app_config.timer)
                 # break
         except KeyboardInterrupt as k:

@@ -10,7 +10,7 @@ from src.app.shared.operations import TableOperationFactoryProtocol, InvalidOper
 from src.app.shared.token_manager import MeliTokenManager
 from src.app.models import ApplicationProtocol
 from src.app.shared.oganizer import GroupBy
-from .operations import CategoryIDByPath, CategoryIDByTitle, PathByCategoryID
+from .operations import CategoryIdFromPathFinder, CategoryIDFromTitle, PathByCategoryID
 
 
 
@@ -29,10 +29,10 @@ class ProdutosCategoryFactory(TableOperationFactoryProtocol):
     def create(self, operation_id: int):
         
         if operation_id == 1:
-            return CategoryIDByPath(self.log, self.repo, self.category_requests)
+            return CategoryIdFromPathFinder(self.log, self.repo, self.category_requests)
         
         elif operation_id == 2 or operation_id == 21:
-            return CategoryIDByTitle(self.log, self.repo, self.items_requests)
+            return CategoryIDFromTitle(self.log, self.repo, self.items_requests)
         
         elif operation_id == 3:
             return PathByCategoryID(self.log, self.repo, self.category_requests)

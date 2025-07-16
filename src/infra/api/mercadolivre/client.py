@@ -41,7 +41,8 @@ class MLBaseClient:
             
         except requests.HTTPError as exc:
             # Erros 4xx/5xx
-            return MeliResponse(
+            
+            http_error = MeliResponse(
                 success=False,
                 http_status=exc.response.status_code,
                 error=MeliErrorDetail(
@@ -54,6 +55,18 @@ class MLBaseClient:
                 )
             )
             
+            # url_list: list[str] = url.split("/")
+            
+            # if exc.response.status_code == 404:
+            #     index: int = url_list.index("items") if "items" in url_list else None
+            #     ml_id: str = url_list[index+1] if index else None
+            #     has_no_mlb: bool = True if not "MLB" in ml_id else False
+            #     if has_no_mlb:
+            #         http_error.error.message += f" | É provável que você tenha esquecido de inserir 'MLB' antes do ID do produto. O que você fez: {ml_id}. Ideal: MLB{ml_id}"
+            
+            
+            return http_error
+        
         except requests.RequestException as exc:
             # Erros de conexão, timeout, etc
             return MeliResponse(
